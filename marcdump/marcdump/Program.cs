@@ -179,7 +179,7 @@ namespace marcdump
                             if (datafield_str[i] < 0x20) break;
                         }
                         if (i - 1 - baseofs < 1) break;
-                        s.data = Encoding.UTF8.GetString(datafield_str, baseofs, i - 1 - baseofs);
+                        s.data = Encoding.UTF8.GetString(datafield_str, baseofs, i - baseofs);
                         d.sub[d.num] = s;
                         d.num++;
                         if (d.num > SUBFIELD_NUM - 1)
