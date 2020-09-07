@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.ConstrainedExecution;
 using System.Text;
@@ -15,8 +16,28 @@ namespace marcdump
                 var labelBin = inputStream.ReadBytes(24);
                 if (labelBin.Length != 24) return null;
                 return Encoding.UTF8.GetString(labelBin);
+            }
 
+            int getBaseAddr(string label)
+            {
+                var ofs = label.Substring(12, 5);
+                if (!int.TryParse(ofs, out int r))
+                {
+                    Console.WriteLine($"Bad Offset:{ofs}");
+                    Process.GetCurrentProcess().Kill();
+                }
+                return r;
+            }
 
+            int getDirLen(string label)
+            {
+                return getBaseAddr(label) - 24;
+            }
+
+            string getDir(string label)
+            {
+                var dirBin = inputStream.ReadBytes(getDirLen(label));
+                return Encoding.UTF8.GetString(dirBin);
             }
 
             for (; ; )
@@ -27,8 +48,15 @@ namespace marcdump
                 if (label == null) break;
 #if DEBUG
                 Console.WriteLine(label);
+#endif
+
+                var directory = getDir(label);
+#if DEBUG
+                Console.WriteLine(directory);
                 break;
 #endif
+
+
                 /* ディレクトリの取得 */
                 //directory = get_dir(directory, get_dirlen(rec.label), fp);
 
