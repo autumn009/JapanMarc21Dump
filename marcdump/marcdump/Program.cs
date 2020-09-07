@@ -29,6 +29,17 @@ namespace marcdump
                 return r;
             }
 
+            int getLength(string label)
+            {
+                var ofs = label.Substring(0, 5);
+                if (!int.TryParse(ofs, out int r))
+                {
+                    Console.WriteLine($"Bad Length:{ofs}");
+                    Process.GetCurrentProcess().Kill();
+                }
+                return r;
+            }
+
             int getDirLen(string label)
             {
                 return getBaseAddr(label) - 24;
@@ -38,6 +49,13 @@ namespace marcdump
             {
                 var dirBin = inputStream.ReadBytes(getDirLen(label));
                 return Encoding.UTF8.GetString(dirBin);
+            }
+
+            string getDataFieldGroup(string label)
+            {
+                int len = getLength(label) - getBaseAddr(label);
+                byte[] bytes = inputStream.ReadBytes(len);
+                return Encoding.UTF8.GetString(bytes);
             }
 
             for (; ; )
@@ -50,18 +68,19 @@ namespace marcdump
                 Console.WriteLine(label);
 #endif
 
+                /* ディレクトリの取得 */
                 var directory = getDir(label);
 #if DEBUG
                 Console.WriteLine(directory);
-                break;
 #endif
 
-
-                /* ディレクトリの取得 */
-                //directory = get_dir(directory, get_dirlen(rec.label), fp);
-
                 /* データフィールド群の取得 */
-                //datafieldgroup = get_datafieldgroup(datafieldgroup, rec.label, fp);
+                var datafieldgroup = getDataFieldGroup(label);
+
+#if DEBUG
+                Console.WriteLine(datafieldgroup);
+                break;
+#endif
 
                 /* 書誌レコードの初期化 */
                 //rec.num = get_dirlen(rec.label) / 12;
