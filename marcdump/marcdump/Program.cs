@@ -163,7 +163,7 @@ namespace marcdump
                 DataField d = new DataField(); /* データフィールド */
 
                 d.num = 0; /* サブデータフィールドの数 */
-                for (var i = 0; i < e.len-1; i++)
+                for (var i = 0; i < datafield_str.Length-1; i++)
                 {
                     if (datafield_str[i] == JPMARC_SF)
                     {
@@ -178,7 +178,7 @@ namespace marcdump
                             if (i >= datafield_str.Length) break;
                             if (datafield_str[i] < 0x20) break;
                         }
-                        if (i - 1 - baseofs < 1) break;
+                        //if (i - baseofs < 1) break;
                         s.data = Encoding.UTF8.GetString(datafield_str, baseofs, i - baseofs);
                         d.sub[d.num] = s;
                         d.num++;
@@ -229,7 +229,7 @@ namespace marcdump
                 /* フィールドの先頭文字の位置: 
                    データフィールド群の先頭からの相対位置 */
                 string buf2 = entry.Substring(7, 5);
-                int.TryParse(buf, out e.addr);
+                int.TryParse(buf2, out e.addr);
                 return e;
             }
 
