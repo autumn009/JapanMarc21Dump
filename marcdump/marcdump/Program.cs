@@ -81,15 +81,15 @@ namespace marcdump
                 return Encoding.UTF8.GetString(dirBin);
             }
 
-            string getDataFieldGroup(string label)
+            byte[] getDataFieldGroup(string label)
             {
                 int len = getLength(label) - getBaseAddr(label);
                 byte[] bytes = inputStream.ReadBytes(len);
-                return Encoding.UTF8.GetString(bytes);
+                return bytes;
             }
 
             /* 001フィールドのデータフィールドの取得 */
-            DataField get001DataField(string datafield_str)
+            DataField get001DataField(byte[] datafield_str)
             {
                 DataField d = new DataField();
 
@@ -110,16 +110,17 @@ namespace marcdump
                 d.sub[0].mode = 1;
 
                 /* 実際のデータ （例: 20000001）*/
-                d.sub[0].data = datafield_str.Substring(0, 8);
+                d.sub[0].data = Encoding.UTF8.GetString(datafield_str, 0, 8);
                 return d;
             }
 
+#if false
             /* サブデータフィールドの取得 */
-            SubDataField getSubField(int addr, string datafield_str)
+            SubDataField getSubField(int addr, byte[] datafield_str)
             {
                 SubDataField s = new SubDataField(); /* サブデータフィールド */
 
-                var idbuf = datafield_str.Substring(addr + 1, 5);
+                var idbuf = Encoding.UTF8.GetString(, addr + 1, 5);
 
                 /* サブフィールド識別文字 （例: A,B,D,Xなど）   */
                 s.id = idbuf[0];
@@ -133,7 +134,9 @@ namespace marcdump
                 int.TryParse(idbuf2, out s.mode);
 
                 /* データ（部） */
-                s.data = datafield_str.Substring(addr + 6, s.datalen);
+                //var dummy = Encoding.UTF8.GetString(datafield_str);
+
+                s.data = Encoding.UTF8.GetString(datafield_str, addr + 6, s.datalen);
 #if false
                 if (s.mode == 1)
                 { /* ASCIIだったら */
@@ -151,10 +154,11 @@ namespace marcdump
 #endif
                 return s;
             }
+#endif
 
             /* 001フィールド以外のデータフィールド
  *  （= サブデータフィールドを含むデータフィールド）の取得 */
-            DataField getOtherDataField(string datafield_str, Entry e)
+            DataField getOtherDataField(byte[] datafield_str, Entry e)
             {
                 DataField d = new DataField(); /* データフィールド */
 
@@ -164,23 +168,36 @@ namespace marcdump
                     if (datafield_str[i] == JPMARC_SF)
                     {
                         /* 各サブデータフィールドを取得 */
-                        d.sub[d.num] = getSubField(i, datafield_str);
+                        SubDataField s = new SubDataField(); /* サブデータフィールド */
+                        i++;
+                        s.id = (char)(datafield_str[i]);
+                        int baseofs = i + 1;
+                        for (; ; )
+                        {
+                            i++;
+                            if (i >= datafield_str.Length) break;
+                            if (datafield_str[i] < 0x20) break;
+                        }
+                        if (i - 1 - baseofs < 1) break;
+                        s.data = Encoding.UTF8.GetString(datafield_str, baseofs, i - 1 - baseofs);
+                        d.sub[d.num] = s;
                         d.num++;
-                    }
-                    if (d.num > SUBFIELD_NUM - 1)
-                    {
-                        Console.WriteLine($"警告：サブフィールドの数が{SUBFIELD_NUM}を越しています。");
-                        break;
+                        if (d.num > SUBFIELD_NUM - 1)
+                        {
+                            Console.WriteLine($"警告：サブフィールドの数が{SUBFIELD_NUM}を越しています。");
+                            break;
+                        }
                     }
                 }
                 return d;
             }
 
-            DataField getDataField(string datafieldgroup, Entry e)
+            DataField getDataField(byte[] datafieldgroup, Entry e)
             {
                 DataField d = new DataField();
                 /* データフィールドを文字列として取り出す */
-                var datafield_str = datafieldgroup.Substring(e.addr, e.len - 1);
+                var datafield_str = new byte[e.len - 1];
+                Array.Copy(datafieldgroup, e.addr, datafield_str, 0, e.len - 1);
 
                 /* データフィールドを構造体として取得 */
                 if (e.field == "001")
@@ -264,7 +281,7 @@ namespace marcdump
                     Console.WriteLine($"{recDirE[i].field} {recDirE[i].len } {recDirE[i].addr }");
                     for (int j = 0; j < recDataD[i].num; j++)
                     {
-                        var subrec = recDataD[i].sub[i];
+                        var subrec = recDataD[i].sub[j];
                         Console.WriteLine($"{subrec.id} {subrec.mode} {subrec.data}");
                     }
                 }
