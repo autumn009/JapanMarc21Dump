@@ -9,6 +9,29 @@ namespace marcdump
 {
     class Program
     {
+        class Entry
+        {
+            internal string field; /* フィールド識別子 （例: 001, 245 など） */
+            internal int len; /* フィールド長 データフィールドの長さ FS含む */
+            internal int addr; /* フィールドの先頭文字の位置
+	          データフィールド群の先頭からの相対位置*/
+        }
+        class SubDataField
+        {
+            /* サブフィールド識別子 */
+            internal char id; /* サブフィールド識別文字 （例: A,B,D,Xなど）*/
+            internal int datalen; /* データ部の長さ */
+            internal int mode; /* データ部のモード （1:ASCII or 2:JIS） */
+            /* データ（部）  */
+            internal string data; /* 実際のデータ （例: JP, 東京 など）*/
+        }
+
+        class DataField
+        {
+            internal int num; /* データフィールド内にあるサブデータフィールドの数 */
+            internal SubDataField[] sub = new SubDataField[256]; /* サブデータフィールドの配列 */
+        }
+
         private static void dumpBody(TextWriter dstWriter, BinaryReader inputStream)
         {
             string getLabel()
@@ -58,6 +81,26 @@ namespace marcdump
                 return Encoding.UTF8.GetString(bytes);
             }
 
+            Entry getDirentry(string directory, int index)
+            {
+                var e = new Entry();
+                int addr = 12 * index; /* エントリの先頭位置 */
+                string entry = directory.Substring(addr, 12);
+
+                /* フィールド識別子 （例: 001, 245 など）*/
+                e.field = entry.Substring(0, 3);
+
+                /* フィールド長: データフィールドの長さ FS含む */
+                string buf = entry.Substring(3, 4);
+                int.TryParse(buf, out e.len);
+
+                /* フィールドの先頭文字の位置: 
+                   データフィールド群の先頭からの相対位置 */
+                string buf2 = entry.Substring(7, 5);
+                int.TryParse(buf, out e.addr);
+                return e;
+            }
+
             for (; ; )
             {
                 /* レコードラベルの取得 */
@@ -78,24 +121,39 @@ namespace marcdump
                 var datafieldgroup = getDataFieldGroup(label);
 
 #if DEBUG
-                Console.WriteLine(datafieldgroup);
-                break;
+                //Console.WriteLine(datafieldgroup);
 #endif
 
                 /* 書誌レコードの初期化 */
-                //rec.num = get_dirlen(rec.label) / 12;
-                //rec.dir.e = malloc(sizeof(struct entry) * rec.num);
-                //rec.data.d =  malloc(sizeof(struct datafield) * rec.num);
+                var recNum = getDirLen(label) / 12;
+                var recDirE = new Entry[recNum];
+                var recDataE = new DataField[recNum];
+#if DEBUG
+                Console.WriteLine($"recNum:{recNum}");
+#endif
 
-                //for (i = 0; i<rec.num; i++){
-                /* エントリの取得 */
-                //rec.dir.e[i] = get_direntry(directory, i);
-                /* データフィールドの取得 */
-                //rec.data.d[i] = get_datafield(datafieldgroup, rec.dir.e[i]);
-                //}
+                for (int i = 0; i < recNum; i++)
+                {
+                    /* エントリの取得 */
+                    recDirE[i] = getDirentry(directory, i);
+                    /* データフィールドの取得 */
+                    //rec.data.d[i] = get_datafield(datafieldgroup, rec.dir.e[i]);
+                }
+#if DEBUG
+                //Console.WriteLine($"recNum:{recNum}");
+#endif
 
                 /* 出力 */
-                //print_record(rec);
+                for (int i = 0; i < recNum; i++)
+                {
+                    Console.WriteLine($"{recDirE[i].field} {recDirE[i].len } {recDirE[i].addr }");
+                    // TBW
+                }
+
+#if DEBUG
+                break;
+#endif
+
             }
         }
         static void Main(string[] args)
