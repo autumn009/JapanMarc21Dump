@@ -3,12 +3,19 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.ConstrainedExecution;
+using System.Runtime.ExceptionServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 
 namespace marcdump
 {
     class Program
     {
+        const char JPMARC_RS = '\x1d'; /* レコードセパレータ */
+        const char JPMARC_FS = '\x1e'; /* フィールドセパレータ */
+        const char JPMARC_SF = '\x1f'; /* サブフィールド識別子の最初の文字 */
+        const int SUBFIELD_NUM = 256;  /* サブフィールドの数 */
+
         class Entry
         {
             internal string field; /* フィールド識別子 （例: 001, 245 など） */
@@ -29,7 +36,7 @@ namespace marcdump
         class DataField
         {
             internal int num; /* データフィールド内にあるサブデータフィールドの数 */
-            internal SubDataField[] sub = new SubDataField[256]; /* サブデータフィールドの配列 */
+            internal SubDataField[] sub = new SubDataField[SUBFIELD_NUM]; /* サブデータフィールドの配列 */
         }
 
         private static void dumpBody(TextWriter dstWriter, BinaryReader inputStream)
@@ -81,6 +88,114 @@ namespace marcdump
                 return Encoding.UTF8.GetString(bytes);
             }
 
+            /* 001フィールドのデータフィールドの取得 */
+            DataField get001DataField(string datafield_str)
+            {
+                DataField d = new DataField();
+
+                /* サブデータフィールドの数 */
+                d.num = 1;
+
+                d.sub = new SubDataField[1];
+                d.sub[0] = new SubDataField();
+
+                /* サブフィールド識別文字 （例: A,B,D,Xなど）   */
+                /* 注）サブフィールド識別文字はないので適当な値 */
+                d.sub[0].id = '1';
+
+                /* データ部の長さ */
+                d.sub[0].datalen = 8;
+
+                /* データ部のモード （1:ASCII） */
+                d.sub[0].mode = 1;
+
+                /* 実際のデータ （例: 20000001）*/
+                d.sub[0].data = datafield_str.Substring(0, 8);
+                return d;
+            }
+
+            /* サブデータフィールドの取得 */
+            SubDataField getSubField(int addr, string datafield_str)
+            {
+                SubDataField s = new SubDataField(); /* サブデータフィールド */
+
+                var idbuf = datafield_str.Substring(addr + 1, 5);
+
+                /* サブフィールド識別文字 （例: A,B,D,Xなど）   */
+                s.id = idbuf[0];
+
+                /* データ部の長さ */
+                var buf = idbuf.Substring(1, 3);
+                int.TryParse(buf, out s.datalen);
+
+                /* データ部のモード （1:ASCII or 2:JIS） */
+                var idbuf2 = idbuf.Substring(4, 1);
+                int.TryParse(idbuf2, out s.mode);
+
+                /* データ（部） */
+                s.data = datafield_str.Substring(addr + 6, s.datalen);
+#if false
+                if (s.mode == 1)
+                { /* ASCIIだったら */
+                    ebcdic2ascii(s.data);
+                }
+                else if (s.mode == 2)
+                { /* JISだったら */
+                    kanji(s.data);
+                }
+                else
+                { /* どちらでもなかったら強制終了 */
+                    printf("!!!!!! NO MODE !!!!!\n");
+                    exit(EXIT_FAILURE);
+                }
+#endif
+                return s;
+            }
+
+            /* 001フィールド以外のデータフィールド
+ *  （= サブデータフィールドを含むデータフィールド）の取得 */
+            DataField getOtherDataField(string datafield_str, Entry e)
+            {
+                DataField d = new DataField(); /* データフィールド */
+
+                d.num = 0; /* サブデータフィールドの数 */
+                for (var i = 0; i < e.len-1; i++)
+                {
+                    if (datafield_str[i] == JPMARC_SF)
+                    {
+                        /* 各サブデータフィールドを取得 */
+                        d.sub[d.num] = getSubField(i, datafield_str);
+                        d.num++;
+                    }
+                    if (d.num > SUBFIELD_NUM - 1)
+                    {
+                        Console.WriteLine($"警告：サブフィールドの数が{SUBFIELD_NUM}を越しています。");
+                        break;
+                    }
+                }
+                return d;
+            }
+
+            DataField getDataField(string datafieldgroup, Entry e)
+            {
+                DataField d = new DataField();
+                /* データフィールドを文字列として取り出す */
+                var datafield_str = datafieldgroup.Substring(e.addr, e.len - 1);
+
+                /* データフィールドを構造体として取得 */
+                if (e.field == "001")
+                {
+                    /* 001フィールドの場合 */
+                    d = get001DataField(datafield_str);
+                }
+                else
+                {
+                    /* 001フィールド以外の場合 */
+                    d = getOtherDataField(datafield_str, e);
+                }
+                return d;
+            }
+
             Entry getDirentry(string directory, int index)
             {
                 var e = new Entry();
@@ -127,7 +242,7 @@ namespace marcdump
                 /* 書誌レコードの初期化 */
                 var recNum = getDirLen(label) / 12;
                 var recDirE = new Entry[recNum];
-                var recDataE = new DataField[recNum];
+                var recDataD = new DataField[recNum];
 #if DEBUG
                 Console.WriteLine($"recNum:{recNum}");
 #endif
@@ -137,7 +252,7 @@ namespace marcdump
                     /* エントリの取得 */
                     recDirE[i] = getDirentry(directory, i);
                     /* データフィールドの取得 */
-                    //rec.data.d[i] = get_datafield(datafieldgroup, rec.dir.e[i]);
+                    recDataD[i] = getDataField(datafieldgroup, recDirE[i]);
                 }
 #if DEBUG
                 //Console.WriteLine($"recNum:{recNum}");
@@ -147,7 +262,11 @@ namespace marcdump
                 for (int i = 0; i < recNum; i++)
                 {
                     Console.WriteLine($"{recDirE[i].field} {recDirE[i].len } {recDirE[i].addr }");
-                    // TBW
+                    for (int j = 0; j < recDataD[i].num; j++)
+                    {
+                        var subrec = recDataD[i].sub[i];
+                        Console.WriteLine($"{subrec.id} {subrec.mode} {subrec.data}");
+                    }
                 }
 
 #if DEBUG
@@ -156,6 +275,7 @@ namespace marcdump
 
             }
         }
+
         static void Main(string[] args)
         {
             if (args.Length == 0 || args.Length > 2)
