@@ -300,12 +300,16 @@ namespace marcdump
                         if (duplicateChecker.ContainsKey(did)) continue;
                         duplicateChecker.Add(did, null);
 
-                        if (fullMode || FieldDic.IsVisibleItem($"{recDirE[i].field}{subrec.id}"))
+                        var visible = FieldDic.IsVisibleItem($"{recDirE[i].field}{subrec.id}");
+                        if (fullMode || visible)
                         {
                             var result = FieldDic.TryGet($"{recDirE[i].field}{subrec.id}", out string category);
                             if (result == false) Console.WriteLine($"category [{category}] not found");
 
-                            dstWriter.WriteLine($"{category}\t{subrec.data}");
+                            if (visible)
+                                dstWriter.WriteLine($"{category}\t{subrec.data}");
+                            else
+                                dstWriter.WriteLine($"({category}\t{subrec.data})");
                         }
                     }
                 }
