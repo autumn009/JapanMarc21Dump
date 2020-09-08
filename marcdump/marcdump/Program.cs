@@ -240,13 +240,13 @@ namespace marcdump
                 /* レコードラベルの取得に失敗したら終了 */
                 if (label == null) break;
 #if DEBUG
-                Console.WriteLine(label);
+                //Console.WriteLine(label);
 #endif
 
                 /* ディレクトリの取得 */
                 var directory = getDir(label);
 #if DEBUG
-                Console.WriteLine(directory);
+                //Console.WriteLine(directory);
 #endif
 
                 /* データフィールド群の取得 */
@@ -261,7 +261,7 @@ namespace marcdump
                 var recDirE = new Entry[recNum];
                 var recDataD = new DataField[recNum];
 #if DEBUG
-                Console.WriteLine($"recNum:{recNum}");
+                //Console.WriteLine($"recNum:{recNum}");
 #endif
 
                 for (int i = 0; i < recNum; i++)
@@ -279,13 +279,13 @@ namespace marcdump
                 for (int i = 0; i < recNum; i++)
                 {
 #if DEBUG
-                    Console.WriteLine($"{recDirE[i].field} {recDirE[i].len } {recDirE[i].addr }");
+                    //Console.WriteLine($"{recDirE[i].field} {recDirE[i].len } {recDirE[i].addr }");
 #endif
                     for (int j = 0; j < recDataD[i].num; j++)
                     {
                         var subrec = recDataD[i].sub[j];
 #if DEBUG
-                        Console.WriteLine($"{subrec.id} {subrec.mode} {subrec.data}");
+                        //Console.WriteLine($"{subrec.id} {subrec.mode} {subrec.data}");
 #endif
                         var result = FieldDic.TryGet($"{recDirE[i].field}{subrec.id}", out string category);
                         if (result == false) Console.WriteLine($"category [{category}] not found");
@@ -294,7 +294,7 @@ namespace marcdump
                 }
 
 #if DEBUG
-                break;
+                //break;
 #endif
 
             }
@@ -327,6 +327,7 @@ namespace marcdump
                     dstWriter.Close();
                 }
             }
+            Console.WriteLine("Done.");
         }
     }
 }
