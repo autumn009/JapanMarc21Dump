@@ -110,7 +110,10 @@ namespace marcdump
                 d.sub[0].mode = 1;
 
                 /* 実際のデータ （例: 20000001）*/
-                d.sub[0].data = Encoding.UTF8.GetString(datafield_str, 0, 8);
+                //Console.WriteLine(Encoding.UTF8.GetString(datafield_str));
+                // 良く分からないがIDが短い場合がある
+                //d.sub[0].data = Encoding.UTF8.GetString(datafield_str, 0, 8);
+                d.sub[0].data = Encoding.UTF8.GetString(datafield_str, 0, Math.Min(8, datafield_str.Length));
                 return d;
             }
 
