@@ -37,6 +37,7 @@ namespace marcdump
         {
             if (dic.TryGetValue(id, out result)) return true;
             result = id;
+            dic.Add(id, id);
             return false;
         }
     }
