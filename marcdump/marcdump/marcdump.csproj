@@ -5,4 +5,12 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="FieldNames.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="FieldNames.txt" />
+  </ItemGroup>
+
 </Project>
