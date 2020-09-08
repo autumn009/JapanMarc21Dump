@@ -40,5 +40,22 @@ namespace marcdump
             dic.Add(id, id);
             return false;
         }
+
+        private static Dictionary<string, bool> visible = new Dictionary<string, bool>()
+        {
+            {"020a", true },
+            {"020c", true },
+            {"028a", true },
+            {"245a", true },
+            {"245b", true },
+            {"260b", true },
+            {"300a", true },
+            {"505a", true },
+        };
+
+        internal static bool IsVisibleItem(string v)
+        {
+            return visible.TryGetValue(v, out bool _);
+        }
     }
 }

@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.CompilerServices;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices.ComTypes;
@@ -17,6 +18,7 @@ namespace marcdump
         const char JPMARC_FS = '\x1e'; /* フィールドセパレータ */
         const char JPMARC_SF = '\x1f'; /* サブフィールド識別子の最初の文字 */
         const int SUBFIELD_NUM = 256;  /* サブフィールドの数 */
+        private static bool fullMode = false;
 
         class Entry
         {
@@ -293,14 +295,18 @@ namespace marcdump
 #if DEBUG
                         //Console.WriteLine($"{subrec.id} {subrec.mode} {subrec.data}");
 #endif
+
                         var did = $"{recDirE[i].field}{subrec.id}\t{subrec.data}";
                         if (duplicateChecker.ContainsKey(did)) continue;
                         duplicateChecker.Add(did, null);
 
-                        var result = FieldDic.TryGet($"{recDirE[i].field}{subrec.id}", out string category);
-                        if (result == false) Console.WriteLine($"category [{category}] not found");
+                        if (fullMode || FieldDic.IsVisibleItem($"{recDirE[i].field}{subrec.id}"))
+                        {
+                            var result = FieldDic.TryGet($"{recDirE[i].field}{subrec.id}", out string category);
+                            if (result == false) Console.WriteLine($"category [{category}] not found");
 
-                        dstWriter.WriteLine($"{category}\t{subrec.data}");
+                            dstWriter.WriteLine($"{category}\t{subrec.data}");
+                        }
                     }
                 }
 
@@ -314,11 +320,12 @@ namespace marcdump
 
         static void Main(string[] args)
         {
-            if (args.Length == 0 || args.Length > 2)
+            if (args.Length == 0 || args.Length > 3)
             {
-                Console.WriteLine("Usase: marcdump INPUT_FILE [OUTPUT_FILE]");
+                usage();
                 return;
             }
+            fullMode = (args.Length > 2 && args[2] == "-f") || (args.Length > 1 && args[1] == "-f");
             var srcFileName = args[0];
             var dstWriter = Console.Out;
             if (args.Length == 2)
@@ -340,6 +347,13 @@ namespace marcdump
                 }
             }
             Console.WriteLine("Done.");
+        }
+
+        private static void usage()
+        {
+            Console.WriteLine("Usase: marcdump INPUT_FILE [OUTPUT_FILE] [-f]");
+            Console.WriteLine("use -f option for full-information");
+            return;
         }
     }
 }
