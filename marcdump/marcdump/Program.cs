@@ -328,7 +328,7 @@ namespace marcdump
             fullMode = (args.Length > 2 && args[2] == "-f") || (args.Length > 1 && args[1] == "-f");
             var srcFileName = args[0];
             var dstWriter = Console.Out;
-            if (args.Length == 2)
+            if (args.Length >= 2 && args[1] != "-f")
             {
                 dstWriter = new StreamWriter(args[1]);
             }
