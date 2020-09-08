@@ -287,7 +287,9 @@ namespace marcdump
 #if DEBUG
                         Console.WriteLine($"{subrec.id} {subrec.mode} {subrec.data}");
 #endif
-                        dstWriter.WriteLine($"{recDirE[i].field}{subrec.id}\t{subrec.data}");
+                        var result = FieldDic.TryGet($"{recDirE[i].field}{subrec.id}", out string category);
+                        if (result == false) Console.WriteLine($"category [{category}] not found");
+                        dstWriter.WriteLine($"{category}\t{subrec.data}");
                     }
                 }
 
