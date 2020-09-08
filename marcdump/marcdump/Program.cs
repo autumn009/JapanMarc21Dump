@@ -167,7 +167,6 @@ namespace marcdump
  *  （= サブデータフィールドを含むデータフィールド）の取得 */
             DataField getOtherDataField(byte[] datafield_str, Entry e)
             {
-                byte lastMarker = (byte)JPMARC_SF;
                 DataField d = new DataField(); /* データフィールド */
 
                 d.num = 0; /* サブデータフィールドの数 */
@@ -183,16 +182,19 @@ namespace marcdump
                         for (; ; )
                         {
                             i++;
-                            if (i >= datafield_str.Length) break;
+                            if (i >= datafield_str.Length)
+                            {
+                                s.data = Encoding.UTF8.GetString(datafield_str, baseofs, i - baseofs);
+                                break;
+                            }
                             if (datafield_str[i] < 0x20)
                             {
-                                lastMarker = datafield_str[i];
+                                s.data = Encoding.UTF8.GetString(datafield_str, baseofs, i - baseofs);
                                 i--;    // あとでインクリメントされてしまうので辻褄を合わせる
                                 break;
                             }
                         }
                         //if (i - baseofs < 1) break;
-                        s.data = Encoding.UTF8.GetString(datafield_str, baseofs, i - baseofs);
                         d.sub[d.num] = s;
                         //i++;
                         d.num++;
