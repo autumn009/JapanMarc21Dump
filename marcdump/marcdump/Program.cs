@@ -287,7 +287,7 @@ namespace marcdump
 #if DEBUG
                         Console.WriteLine($"{subrec.id} {subrec.mode} {subrec.data}");
 #endif
-                        dstWriter.WriteLine($"{recDirE[i].field}\t{subrec.data}");
+                        dstWriter.WriteLine($"{recDirE[i].field}{subrec.id}\t{subrec.data}");
                     }
                 }
 
