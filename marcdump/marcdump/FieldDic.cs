@@ -46,6 +46,10 @@ namespace marcdump
                         }
                         dic.Add(id, val);
                     }
+                    else
+                    {
+                        dic.Add(id, id);
+                    }
                 }
             }
         }
