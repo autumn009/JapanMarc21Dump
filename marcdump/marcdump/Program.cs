@@ -278,11 +278,16 @@ namespace marcdump
                 /* 出力 */
                 for (int i = 0; i < recNum; i++)
                 {
+#if DEBUG
                     Console.WriteLine($"{recDirE[i].field} {recDirE[i].len } {recDirE[i].addr }");
+#endif
                     for (int j = 0; j < recDataD[i].num; j++)
                     {
                         var subrec = recDataD[i].sub[j];
+#if DEBUG
                         Console.WriteLine($"{subrec.id} {subrec.mode} {subrec.data}");
+#endif
+                        dstWriter.WriteLine($"{recDirE[i].field}\t{subrec.data}");
                     }
                 }
 
