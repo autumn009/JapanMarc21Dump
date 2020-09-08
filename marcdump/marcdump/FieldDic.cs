@@ -37,12 +37,15 @@ namespace marcdump
                     if (s == null) break;
                     var id = s.Substring(0, 4);
                     var val = s.Substring(4);
-                    if( val.EndsWith("*"))
+                    if (val.Length > 0)
                     {
-                        visible.Add(id, true);
-                        val = val.Substring(0,val.Length-1);
+                        if (val.EndsWith("*"))
+                        {
+                            visible.Add(id, true);
+                            val = val.Substring(0, val.Length - 1);
+                        }
+                        dic.Add(id, val);
                     }
-                    dic.Add(id, val);
                 }
             }
         }
