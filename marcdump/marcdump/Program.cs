@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices.ComTypes;
@@ -278,6 +280,7 @@ namespace marcdump
                 //Console.WriteLine($"recNum:{recNum}");
 #endif
 
+                Dictionary<string, string> duplicateChecker = new Dictionary<string, string>();
                 /* 出力 */
                 for (int i = 0; i < recNum; i++)
                 {
@@ -290,8 +293,13 @@ namespace marcdump
 #if DEBUG
                         //Console.WriteLine($"{subrec.id} {subrec.mode} {subrec.data}");
 #endif
+                        var did = $"{recDirE[i].field}{subrec.id}\t{subrec.data}";
+                        if (duplicateChecker.ContainsKey(did)) continue;
+                        duplicateChecker.Add(did, null);
+
                         var result = FieldDic.TryGet($"{recDirE[i].field}{subrec.id}", out string category);
                         if (result == false) Console.WriteLine($"category [{category}] not found");
+
                         dstWriter.WriteLine($"{category}\t{subrec.data}");
                     }
                 }
@@ -299,7 +307,8 @@ namespace marcdump
 #if DEBUG
                 //break;
 #endif
-
+                // レコードセパレーター
+                dstWriter.WriteLine();
             }
         }
 
