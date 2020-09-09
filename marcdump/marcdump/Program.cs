@@ -262,6 +262,8 @@ namespace marcdump
 
             string parseMyDate(string src)
             {
+                // 昭和50.
+                // 昭和49-50
                 // 2020.2.
                 // [2020.3]
                 // [19--]
@@ -271,11 +273,16 @@ namespace marcdump
                 var s2 = "0";
                 var s3 = "0";
                 if (ar.Length > 0) s1 = ar[0];
+                if (s1.StartsWith("昭和"))
+                {
+                    var showa = s1.Substring(2, 2);
+                    if (int.TryParse(showa, out int n)) s1 = (n + 1925).ToString();
+                }
                 if (ar.Length > 1) s2 = ar[1];
                 if (ar.Length > 2) s3 = ar[2];
                 var r = parseMyDateBy3(s1, s2, s3);
 #if DEBUG
-                Console.WriteLine($"{r} {s1} {s2} {s3} {s}");
+                //Console.WriteLine($"{r} {s1} {s2} {s3} {s}");
 #endif
                 return r;
             }
