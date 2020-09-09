@@ -19,10 +19,15 @@ namespace marcdump
         const char JPMARC_RS = '\x1d'; /* レコードセパレータ */
         const char JPMARC_FS = '\x1e'; /* フィールドセパレータ */
         const char JPMARC_SF = '\x1f'; /* サブフィールド識別子の最初の文字 */
+        const string FieldIdDate = "260c";   // 出版年月・頒布年月等 ID
         const int SUBFIELD_NUM = 256;  /* サブフィールドの数 */
         private static bool fullMode = false;
         private static bool inverseMode = false;
         private static bool htmlMode = false;
+        private static int TotalCounter = 0;    // 検出レコード数
+        private static int DateDetectCounter = 0;   // date検出レコード数
+
+
 
         class Entry
         {
@@ -253,6 +258,14 @@ namespace marcdump
                 return e;
             }
 
+            string parseMyDate(string src)
+            {
+                // TBW
+                return src;
+            }
+
+
+            DateDetectCounter = 0;
             for (; ; )
             {
                 /* レコードラベルの取得 */
@@ -296,6 +309,7 @@ namespace marcdump
 #endif
 
                 Dictionary<string, string> duplicateChecker = new Dictionary<string, string>();
+                string date = null;
                 /* 出力 */
                 for (int i = 0; i < recNum; i++)
                 {
@@ -324,14 +338,23 @@ namespace marcdump
                             else
                                 dstWriter.WriteLine($"({category}\t{subrec.data})");
                         }
+
+                        if ($"{recDirE[i].field}{subrec.id}" == FieldIdDate) date = parseMyDate(subrec.data);
                     }
                 }
+
 
 #if DEBUG
                 //break;
 #endif
                 // レコードセパレーター
                 dstWriter.WriteLine();
+                TotalCounter++;
+                if (date != null)
+                {
+                    dstWriter.WriteLine("Detected Date: {date}");
+                    DateDetectCounter++;
+                }
             }
         }
 
@@ -379,6 +402,8 @@ namespace marcdump
                     dstWriter.Close();
                 }
             }
+            Console.WriteLine($"TotalCount: {TotalCounter}");
+            Console.WriteLine($"MissingDateCount: {TotalCounter-DateDetectCounter}");
             Console.WriteLine("Done.");
         }
 
