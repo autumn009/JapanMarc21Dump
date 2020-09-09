@@ -310,6 +310,10 @@ namespace marcdump
 
                 Dictionary<string, string> duplicateChecker = new Dictionary<string, string>();
                 string date = null;
+                string f363i = null;
+                string f363j = null;
+                string f363k = null;
+                string f363l = null;
                 /* 出力 */
                 for (int i = 0; i < recNum; i++)
                 {
@@ -319,18 +323,19 @@ namespace marcdump
                     for (int j = 0; j < recDataD[i].num; j++)
                     {
                         var subrec = recDataD[i].sub[j];
+                        var id = $"{recDirE[i].field}{subrec.id}";
 #if DEBUG
                         //Console.WriteLine($"{subrec.id} {subrec.mode} {subrec.data}");
 #endif
 
-                        var did = $"{recDirE[i].field}{subrec.id}\t{subrec.data}";
+                        var did = $"{id}\t{subrec.data}";
                         if (duplicateChecker.ContainsKey(did)) continue;
                         duplicateChecker.Add(did, null);
 
-                        var visible = inverseMode ^ FieldDic.IsVisibleItem($"{recDirE[i].field}{subrec.id}");
+                        var visible = inverseMode ^ FieldDic.IsVisibleItem(id);
                         if (fullMode || visible)
                         {
-                            var result = FieldDic.TryGet($"{recDirE[i].field}{subrec.id}", out string category);
+                            var result = FieldDic.TryGet(id, out string category);
                             if (result == false) Console.WriteLine($"category [{category}] not found");
 
                             if (visible)
@@ -339,7 +344,11 @@ namespace marcdump
                                 dstWriter.WriteLine($"({category}\t{subrec.data})");
                         }
 
-                        if ($"{recDirE[i].field}{subrec.id}" == FieldIdDate) date = parseMyDate(subrec.data);
+                        if (id == FieldIdDate) date = parseMyDate(subrec.data);
+                        if (id == "363i") f363i = subrec.data;
+                        if (id == "363j") f363j = subrec.data;
+                        if (id == "363k") f363k = subrec.data;
+                        if (id == "363l") f363l = subrec.data;
                     }
                 }
 
@@ -347,14 +356,29 @@ namespace marcdump
 #if DEBUG
                 //break;
 #endif
-                // レコードセパレーター
-                dstWriter.WriteLine();
+                // レコードエンド
                 TotalCounter++;
+                if (date == null && f363i != null)
+                {
+                    // fix parsing
+                    date = f363i;
+                    if (f363j != null) date = date + "/" + f363j;
+                    if (f363k != null) date = date + "/" + f363k;
+                    if (f363l != null) date = date + "/" + f363l;
+                }
                 if (date != null)
                 {
-                    dstWriter.WriteLine("Detected Date: {date}");
+                    dstWriter.WriteLine($"Detected Date: {date}");
                     DateDetectCounter++;
                 }
+#if DEBUG
+                else
+                {
+                    dstWriter.WriteLine("!!Missing Date!!");
+                }
+#endif
+                // レコードセパレーター
+                dstWriter.WriteLine();
             }
         }
 
