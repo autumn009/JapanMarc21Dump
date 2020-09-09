@@ -5,11 +5,13 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices.ComTypes;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace marcdump
@@ -260,11 +262,26 @@ namespace marcdump
 
             string parseMyDate(string src)
             {
-                // TBW
-                return src;
+                // 2020.2.
+                // [2020.3]
+                // [19--]
+                var s = src.TrimStart('[').TrimEnd(']').Replace('-', '0');
+                var ar = s.Split('.');
+                var s1 = "0";
+                var s2 = "0";
+                var s3 = "0";
+                if (ar.Length > 0) s1 = ar[0];
+                if (ar.Length > 1) s2 = ar[1];
+                if (ar.Length > 2) s3 = ar[2];
+                var r = parseMyDateBy3(s1, s2, s3);
+#if DEBUG
+                Console.WriteLine($"{r} {s1} {s2} {s3} {s}");
+#endif
+                return r;
             }
             bool numberTester(string s)
             {
+                if (s.Length > 4) return false;
                 foreach (var item in s)
                 {
                     if( item < '0' || item > '9')
@@ -280,9 +297,18 @@ namespace marcdump
 
             string parseMyDateBy3(string s1,string s2, string s3)
             {
-                if (string.IsNullOrWhiteSpace(s1) || !numberTester(s1)) s1 = "0";
-                if (string.IsNullOrWhiteSpace(s2) || !numberTester(s2)) s2 = "0";
                 if (string.IsNullOrWhiteSpace(s3) || !numberTester(s3)) s3 = "0";
+                if (string.IsNullOrWhiteSpace(s2) || !numberTester(s2))
+                {
+                    s2 = "0";
+                    s3 = "0";
+                }
+                if (string.IsNullOrWhiteSpace(s1) || !numberTester(s1))
+                {
+                    s1 = "0";
+                    s2 = "0";
+                    s3 = "0";
+                }
                 var r = s1.PadRight(4, '0') + s2.PadRight(2, '0') + s3.PadRight(2, '0');
 #if DEBUG
                 //Console.WriteLine($"{r} {s1} {s2} {s3}");
