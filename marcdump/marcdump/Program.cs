@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
 using System.Runtime.ConstrainedExecution;
@@ -19,6 +21,8 @@ namespace marcdump
         const char JPMARC_SF = '\x1f'; /* サブフィールド識別子の最初の文字 */
         const int SUBFIELD_NUM = 256;  /* サブフィールドの数 */
         private static bool fullMode = false;
+        private static bool inverseMode = false;
+        private static bool htmlMode = false;
 
         class Entry
         {
@@ -331,19 +335,35 @@ namespace marcdump
             }
         }
 
+        static private void parseArg(string[] args, out string[] items, out string[] options)
+        {
+            List<string> itemsList = new List<string>();
+            List<string> optionsList = new List<string>();
+            foreach (var item in args)
+            {
+                if (item.StartsWith("-")) optionsList.Add(item); else itemsList.Add(item);
+            }
+            items = itemsList.ToArray();
+            options = optionsList.ToArray();
+        }
+
         static void Main(string[] args)
         {
-            if (args.Length == 0 || args.Length > 3)
+            string[] rawArgs, options;
+            parseArg(args, out rawArgs, out options);
+            if (rawArgs.Length == 0 || rawArgs.Length > 2 || options.Contains("-?"))
             {
                 usage();
                 return;
             }
-            fullMode = (args.Length > 2 && args[2] == "-f") || (args.Length > 1 && args[1] == "-f");
-            var srcFileName = args[0];
+            fullMode = options.Contains("-f");
+            inverseMode = options.Contains("-i");
+            htmlMode = options.Contains("-h");
+            var srcFileName = rawArgs[0];
             var dstWriter = Console.Out;
-            if (args.Length >= 2 && args[1] != "-f")
+            if (rawArgs.Length >= 2)
             {
-                dstWriter = new StreamWriter(args[1]);
+                dstWriter = new StreamWriter(rawArgs[1]);
             }
             try
             {
@@ -354,7 +374,7 @@ namespace marcdump
             }
             finally
             {
-                if (args.Length == 2)
+                if (rawArgs.Length >= 2)
                 {
                     dstWriter.Close();
                 }
@@ -366,6 +386,9 @@ namespace marcdump
         {
             Console.WriteLine("Usase: marcdump INPUT_FILE [OUTPUT_FILE] [-f]");
             Console.WriteLine("use -f option for full-information");
+            Console.WriteLine("use -i option for invers information");
+            Console.WriteLine("use -h option for output HTML mode");
+            Console.WriteLine("use -? option for dump this message");
             return;
         }
     }
