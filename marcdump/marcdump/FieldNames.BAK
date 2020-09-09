@@ -37,13 +37,16 @@
 300bその他の形態的細目*
 300c大きさ*
 300e付属資料*
-363a
-363b
-363g
-363h
-363i
-363j
-363k
+363aFirst level of enumeration
+363bSecond level of enumeration
+363cThird level of enumeration
+363d
+363gAlternative numbering scheme, first level of enumeration
+363hAlternative numbering scheme, second level of enumeration
+363iFirst level of chronology
+363jSecond level of chronology
+363kThird level of chronology
+363lFourth level of chronology
 4906読みの対応関係
 490aシリーズタイトル等*
 490vシリーズ番号*
@@ -93,7 +96,7 @@
 740aその他のタイトル標目
 773d
 773g
-773t
+773t*
 773w
 8800
 880a
