@@ -263,14 +263,29 @@ namespace marcdump
                 // TBW
                 return src;
             }
+            bool numberTester(string s)
+            {
+                foreach (var item in s)
+                {
+                    if( item < '0' || item > '9')
+                    {
+#if DEBUG
+                        //Console.WriteLine($"{s} is not number");
+#endif
+                        return false;
+                    }
+                }
+                return true;
+            }
+
             string parseMyDateBy3(string s1,string s2, string s3)
             {
-                if (string.IsNullOrWhiteSpace(s1)) s1 = "0";
-                if (string.IsNullOrWhiteSpace(s2)) s2 = "0";
-                if (string.IsNullOrWhiteSpace(s3)) s3 = "0";
+                if (string.IsNullOrWhiteSpace(s1) || !numberTester(s1)) s1 = "0";
+                if (string.IsNullOrWhiteSpace(s2) || !numberTester(s2)) s2 = "0";
+                if (string.IsNullOrWhiteSpace(s3) || !numberTester(s3)) s3 = "0";
                 var r = s1.PadRight(4, '0') + s2.PadRight(2, '0') + s3.PadRight(2, '0');
 #if DEBUG
-                Console.WriteLine($"{r} {s1} {s2} {s3}");
+                //Console.WriteLine($"{r} {s1} {s2} {s3}");
 #endif
                 return r;
             }
