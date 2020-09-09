@@ -313,7 +313,7 @@ namespace marcdump
                         if (duplicateChecker.ContainsKey(did)) continue;
                         duplicateChecker.Add(did, null);
 
-                        var visible = FieldDic.IsVisibleItem($"{recDirE[i].field}{subrec.id}");
+                        var visible = inverseMode ^ FieldDic.IsVisibleItem($"{recDirE[i].field}{subrec.id}");
                         if (fullMode || visible)
                         {
                             var result = FieldDic.TryGet($"{recDirE[i].field}{subrec.id}", out string category);
