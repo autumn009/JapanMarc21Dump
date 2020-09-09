@@ -263,6 +263,17 @@ namespace marcdump
                 // TBW
                 return src;
             }
+            string parseMyDateBy3(string s1,string s2, string s3)
+            {
+                if (string.IsNullOrWhiteSpace(s1)) s1 = "0";
+                if (string.IsNullOrWhiteSpace(s2)) s2 = "0";
+                if (string.IsNullOrWhiteSpace(s3)) s3 = "0";
+                var r = s1.PadRight(4, '0') + s2.PadRight(2, '0') + s3.PadRight(2, '0');
+#if DEBUG
+                Console.WriteLine($"{r} {s1} {s2} {s3}");
+#endif
+                return r;
+            }
 
 
             DateDetectCounter = 0;
@@ -360,11 +371,7 @@ namespace marcdump
                 TotalCounter++;
                 if (date == null && f363i != null)
                 {
-                    // fix parsing
-                    date = f363i;
-                    if (f363j != null) date = date + "/" + f363j;
-                    if (f363k != null) date = date + "/" + f363k;
-                    if (f363l != null) date = date + "/" + f363l;
+                    date = parseMyDateBy3(f363i, f363j, f363k);
                 }
                 if (date != null)
                 {
