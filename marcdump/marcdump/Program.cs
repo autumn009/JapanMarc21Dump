@@ -366,7 +366,7 @@ namespace marcdump
                     foreach (var item in ar)
                     {
                         var s = item.Trim();
-                        var index = s.IndexOf(' ');
+                        var index = s.LastIndexOf(' ');
                         if (index > 1)
                         {
                             s = s.Substring(0, index);
