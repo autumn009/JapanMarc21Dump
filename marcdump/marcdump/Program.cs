@@ -556,6 +556,8 @@ namespace marcdump
                         if (id == "245a") subject += textFixer(subrec.data);
                         if (id == "245b") subject += textFixer(subrec.data);
                         if (id == "773t") subject += textFixer(subrec.data);
+                        if (id == "245n") subject += " " + textFixer(subrec.data);
+                        //if (id == "300a") subject += " " + textFixer(subrec.data);
                         if (id == "0011") internalId = subrec.data;
                         if (id == "245c") parseNames(writerNames, subrec.data);
                         //if (id == "500a") parseNames(writerNames, subrec.data);
