@@ -21,9 +21,9 @@ namespace marcdump
             foreach (byte b in bs) result.Append(b.ToString("X2"));
             return result.ToString();
         }
-        internal static string CreateId(string title, string date)
+        internal static string CreateId(string title, string internalId)
         {
-            var basestr = title + date;
+            var basestr = title + internalId;
             return "YBD" + getMD5HashString(basestr);
         }
     }

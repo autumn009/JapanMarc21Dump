@@ -28,8 +28,7 @@ namespace marcdump
         private static bool htmlMode = false;
         private static int TotalCounter = 0;    // 検出レコード数
         private static int DateDetectCounter = 0;   // date検出レコード数
-
-
+        private static int SubjectDetectCounter = 0;    // subject検出レコード数
 
         class Entry
         {
@@ -64,6 +63,7 @@ namespace marcdump
         class myItem
         {
             internal string id;
+            internal string Subject;
             internal string Date;
             internal List<myField> fields = new List<myField>();
         }
@@ -345,7 +345,7 @@ namespace marcdump
             {
                 foreach (var item in items)
                 {
-                    dstWriter.WriteLine($"Subject: {item.Date}");   // TBW
+                    dstWriter.WriteLine($"Subject: {item.Subject}");
                     dstWriter.WriteLine($"Date: {item.Date}");
                     dstWriter.WriteLine($"ID: {item.id}");
                     foreach (var field in item.fields)
@@ -355,9 +355,9 @@ namespace marcdump
                         else
                             dstWriter.WriteLine($"{field.id}\t{field.data}");
                     }
+                    // レコードセパレーター
+                    dstWriter.WriteLine();
                 }
-                // レコードセパレーター
-                dstWriter.WriteLine();
             }
 
             DateDetectCounter = 0;
@@ -409,6 +409,8 @@ namespace marcdump
                 string f363j = null;
                 string f363k = null;
                 string f363l = null;
+                string subject = "";
+                string internalId = null;
                 var fields = new List<myField>();
                 /* 出力 */
                 for (int i = 0; i < recNum; i++)
@@ -442,6 +444,10 @@ namespace marcdump
                         if (id == "363j") f363j = subrec.data;
                         if (id == "363k") f363k = subrec.data;
                         if (id == "363l") f363l = subrec.data;
+                        if (id == "245a") subject += subrec.data;
+                        if (id == "245b") subject += subrec.data;
+                        if (id == "773t") subject += subrec.data;
+                        if (id == "0011") internalId = subrec.data;
                     }
                 }
 
@@ -457,16 +463,23 @@ namespace marcdump
                 }
                 if (date != null)
                 {
-                    var subject = "TBW";
-                    var myid = MyId.CreateId(subject, date);
-                    items.Add(new myItem() { Date = date, id = myid, fields = fields });
+                    if( internalId == null)
+                    {
+                        Console.WriteLine("Missing internalId");
+                    }
+                    var myid = TotalCounter.ToString("YBD0000"); //MyId.CreateId(subject, internalId);
+                    items.Add(new myItem() { Subject = subject,  Date = date, id = myid, fields = fields });
                     if (idChecker.ContainsKey(myid))
-                        Console.WriteLine($"Duplicated ID {myid}, {subject}, {date}");
+                        Console.WriteLine($"Duplicated ID {myid}, {subject}, {internalId}");
                     else
                         idChecker.Add(myid, false);
 
                     //dstWriter.WriteLine($"Detected Date: {date}");
                     DateDetectCounter++;
+                    if( subject.Length > 0)
+                    {
+                        SubjectDetectCounter++;
+                    }
                 }
 #if DEBUG
                 else
@@ -542,6 +555,7 @@ namespace marcdump
             }
             Console.WriteLine($"TotalCount: {TotalCounter}");
             Console.WriteLine($"MissingDateCount: {TotalCounter-DateDetectCounter}");
+            Console.WriteLine($"MissingSubjectCount: {TotalCounter - SubjectDetectCounter}");
             Console.WriteLine("Done.");
         }
 
