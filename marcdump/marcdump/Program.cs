@@ -369,11 +369,23 @@ namespace marcdump
                         var index = s.LastIndexOf(' ');
                         if (index > 1)
                         {
-                            s = s.Substring(0, index);
+                            char ch = s[index + 1];
+                            if (ch >= 0x100) s = s.Substring(0, index);
+                        }
+                        var index2 = s.LastIndexOf(' ');
+                        if (index2 > 1)
+                        {
+                            char ch = s[index2 + 1];
+                            if (ch == '[') s = s.Substring(0, index2);
                         }
                         if (s.EndsWith("."))
                         {
                             s = s.Substring(0, s.Length - 1);
+                        }
+                        // special fixer
+                        if( s.StartsWith("宮川彬良 指揮"))
+                        {
+                            s = "宮川彬良";
                         }
 #if DEBUG
                         //Console.WriteLine($"****Name {s}");
