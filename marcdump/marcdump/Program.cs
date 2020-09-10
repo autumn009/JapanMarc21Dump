@@ -54,6 +54,21 @@ namespace marcdump
             internal SubDataField[] sub = new SubDataField[SUBFIELD_NUM]; /* サブデータフィールドの配列 */
         }
 
+        class myField
+        {
+            internal string id;
+            internal string data;
+            internal bool kakkoItem;
+        }
+
+        class myItem
+        {
+            internal string id;
+            internal string Date;
+            internal List<myField> fields = new List<myField>();
+        }
+
+
         private static void dumpBody(TextWriter dstWriter, BinaryReader inputStream)
         {
             string getLabel()
@@ -291,7 +306,7 @@ namespace marcdump
                 if (s.Length > 4) return false;
                 foreach (var item in s)
                 {
-                    if( item < '0' || item > '9')
+                    if (item < '0' || item > '9')
                     {
 #if DEBUG
                         //Console.WriteLine($"{s} is not number");
@@ -302,7 +317,7 @@ namespace marcdump
                 return true;
             }
 
-            string parseMyDateBy3(string s1,string s2, string s3)
+            string parseMyDateBy3(string s1, string s2, string s3)
             {
                 if (string.IsNullOrWhiteSpace(s3) || !numberTester(s3)) s3 = "0";
                 if (string.IsNullOrWhiteSpace(s2) || !numberTester(s2))
@@ -323,6 +338,25 @@ namespace marcdump
                 return r;
             }
 
+            var items = new List<myItem>();
+
+            void normalDump()
+            {
+                foreach (var item in items)
+                {
+                    dstWriter.WriteLine($"Subject: {item.Date}");   // TBW
+                    dstWriter.WriteLine($"Date: {item.Date}");
+                    foreach (var field in item.fields)
+                    {
+                        if (field.kakkoItem)
+                            dstWriter.WriteLine($"({field.id}\t{field.data})");
+                        else
+                            dstWriter.WriteLine($"{field.id}\t{field.data}");
+                    }
+                }
+                // レコードセパレーター
+                dstWriter.WriteLine();
+            }
 
             DateDetectCounter = 0;
             for (; ; )
@@ -373,6 +407,7 @@ namespace marcdump
                 string f363j = null;
                 string f363k = null;
                 string f363l = null;
+                var fields = new List<myField>();
                 /* 出力 */
                 for (int i = 0; i < recNum; i++)
                 {
@@ -397,10 +432,7 @@ namespace marcdump
                             var result = FieldDic.TryGet(id, out string category);
                             if (result == false) Console.WriteLine($"category [{category}] not found");
 
-                            if (visible)
-                                dstWriter.WriteLine($"{category}\t{subrec.data}");
-                            else
-                                dstWriter.WriteLine($"({category}\t{subrec.data})");
+                            fields.Add(new myField() { id = category, data = subrec.data, kakkoItem = !visible });
                         }
 
                         if (id == FieldIdDate) date = parseMyDate(subrec.data);
@@ -423,19 +455,38 @@ namespace marcdump
                 }
                 if (date != null)
                 {
-                    dstWriter.WriteLine($"Detected Date: {date}");
+                    var subject = "TBW";
+                    items.Add(new myItem() { Date = date, id = MyId.CreateId(subject, date), fields = fields });
+                    //dstWriter.WriteLine($"Detected Date: {date}");
                     DateDetectCounter++;
                 }
 #if DEBUG
                 else
                 {
-                    dstWriter.WriteLine("!!Missing Date!!");
+                    //dstWriter.WriteLine("!!Missing Date!!");
                 }
 #endif
                 // レコードセパレーター
-                dstWriter.WriteLine();
+                //dstWriter.WriteLine();
+            }
+
+            // sort by date
+            items.Sort((x, y) =>
+            {
+                return int.Parse(x.Date) - int.Parse(y.Date);
+            });
+
+            // output by mode
+            if (htmlMode)
+            {
+                // HtmlDump();
+            }
+            else
+            {
+                normalDump();
             }
         }
+
 
         static private void parseArg(string[] args, out string[] items, out string[] options)
         {
