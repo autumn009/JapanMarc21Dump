@@ -30,6 +30,7 @@ namespace marcdump
         private static int TotalCounter = 0;    // 検出レコード数
         private static int DateDetectCounter = 0;   // date検出レコード数
         private static int SubjectDetectCounter = 0;    // subject検出レコード数
+        private static Dictionary<string, int> AllWriterNames = new Dictionary<string, int>();
 
         class Entry
         {
@@ -67,6 +68,7 @@ namespace marcdump
             internal string Subject;
             internal string Date;
             internal List<myField> fields = new List<myField>();
+            internal List<string> writerNames;
         }
 
 
@@ -339,6 +341,48 @@ namespace marcdump
                 return r;
             }
 
+            void parseNames(List<string> writerNames, string data)
+            {
+                if (data.Contains(":"))
+                {
+                    var index = data.IndexOf(' ');
+                    if (index > 1)
+                    {
+                        var s = data.Substring(index + 1);
+                        if (s.EndsWith("ほか."))
+                        {
+                            s = s.Substring(0, s.Length - 3);
+#if DEBUG
+                            //Console.WriteLine($"****Name {s}");
+#endif
+                            writerNames.Add(s);
+                        }
+                    }
+                }
+                else
+                {
+                    var r = data.Replace(';', ',');
+                    var ar = r.Split(',');
+                    foreach (var item in ar)
+                    {
+                        var s = item.Trim();
+                        var index = s.IndexOf(' ');
+                        if (index > 1)
+                        {
+                            s = s.Substring(0, index);
+                        }
+                        if (s.EndsWith("."))
+                        {
+                            s = s.Substring(0, s.Length - 1);
+                        }
+#if DEBUG
+                        //Console.WriteLine($"****Name {s}");
+#endif
+                        writerNames.Add(s);
+                    }
+                }
+            }
+
             var items = new List<myItem>();
             var idChecker = new Dictionary<string, bool>();
 
@@ -355,6 +399,7 @@ namespace marcdump
                 {
                     dstWriter.WriteLine($"Subject: {item.Subject}");
                     dstWriter.WriteLine($"Date: {item.Date}");
+                    dstWriter.WriteLine($"Writer(s): {string.Join(',', item.writerNames)}");
                     dstWriter.WriteLine($"ID: {item.id}");
                     foreach (var field in item.fields)
                     {
@@ -419,6 +464,7 @@ namespace marcdump
                 string f363l = null;
                 string subject = "";
                 string internalId = null;
+                var writerNames = new List<string>();
                 var fields = new List<myField>();
                 /* 出力 */
                 for (int i = 0; i < recNum; i++)
@@ -456,6 +502,8 @@ namespace marcdump
                         if (id == "245b") subject += subrec.data;
                         if (id == "773t") subject += subrec.data;
                         if (id == "0011") internalId = subrec.data;
+                        if (id == "245c") parseNames(writerNames, subrec.data);
+                        //if (id == "500a") parseNames(writerNames, subrec.data);
                     }
                 }
 
@@ -476,7 +524,15 @@ namespace marcdump
                         Console.WriteLine("Missing internalId");
                     }
                     var myid = TotalCounter.ToString("YBD0000"); //MyId.CreateId(subject, internalId);
-                    items.Add(new myItem() { Subject = subject,  Date = date, id = myid, fields = fields });
+                    items.Add(new myItem() { Subject = subject,  Date = date, id = myid, fields = fields, writerNames = writerNames });
+                    foreach (var item in writerNames)
+                    {
+                        if (AllWriterNames.ContainsKey(item))
+                            AllWriterNames[item]++;
+                        else
+                            AllWriterNames.Add(item, 1);
+                    }
+
                     if (idChecker.ContainsKey(myid))
                         Console.WriteLine($"Duplicated ID {myid}, {subject}, {internalId}");
                     else
@@ -519,7 +575,6 @@ namespace marcdump
                 normalDump();
             }
         }
-
 
         static private void parseArg(string[] args, out string[] items, out string[] options)
         {
