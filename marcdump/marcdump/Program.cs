@@ -429,7 +429,7 @@ namespace marcdump
                 }
                 // 著者集計リスト
                 dstWriter.WriteLine("著者集計リスト");
-                foreach (var item in AllWriterNames.OrderByDescending(c => c.Value))
+                foreach (var item in AllWriterNames.OrderByDescending(c => c.Value).ThenBy(c=>c.Key))
                 {
                     dstWriter.WriteLine($"{item.Key}\t{item.Value}");
                 }
