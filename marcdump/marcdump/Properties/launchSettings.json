@@ -2,7 +2,7 @@
   "profiles": {
     "marcdump": {
       "commandName": "Project",
-      "commandLineArgs": "\"C:\\Users\\autumn.PDTOKYO4\\OneDrive\\SelfShare\\0pub\\Yamato\\BookDirectory\\MARC_宇宙戦艦ヤマト.dat\" \"c:\\delme\\delme.txt\" -f"
+      "commandLineArgs": "\"C:\\Users\\autumn.PDTOKYO4\\OneDrive\\SelfShare\\0pub\\Yamato\\BookDirectory\\MARC_宇宙戦艦ヤマト.dat\" \"c:\\delme\\delme.txt\" -d"
     }
   }
 }

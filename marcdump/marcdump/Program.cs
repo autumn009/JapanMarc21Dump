@@ -26,6 +26,7 @@ namespace marcdump
         private static bool fullMode = false;
         private static bool inverseMode = false;
         private static bool htmlMode = false;
+        private static bool digestMode = false;
         private static int TotalCounter = 0;    // 検出レコード数
         private static int DateDetectCounter = 0;   // date検出レコード数
         private static int SubjectDetectCounter = 0;    // subject検出レコード数
@@ -341,6 +342,13 @@ namespace marcdump
             var items = new List<myItem>();
             var idChecker = new Dictionary<string, bool>();
 
+            void digestDump()
+            {
+                foreach (var item in items)
+                {
+                    dstWriter.WriteLine($"{item.Date} {item.Subject}");
+                }
+            }
             void normalDump()
             {
                 foreach (var item in items)
@@ -502,6 +510,10 @@ namespace marcdump
             {
                 // HtmlDump();
             }
+            else if( digestMode)
+            {
+                digestDump();
+            }
             else
             {
                 normalDump();
@@ -533,6 +545,7 @@ namespace marcdump
             fullMode = options.Contains("-f");
             inverseMode = options.Contains("-i");
             htmlMode = options.Contains("-h");
+            digestMode = options.Contains("-d");
             var srcFileName = rawArgs[0];
             var dstWriter = Console.Out;
             if (rawArgs.Length >= 2)
@@ -565,6 +578,7 @@ namespace marcdump
             Console.WriteLine("use -f option for full-information");
             Console.WriteLine("use -i option for invers information");
             Console.WriteLine("use -h option for output HTML mode");
+            Console.WriteLine("use -d option for output Digest mode");
             Console.WriteLine("use -? option for dump this message");
             return;
         }
