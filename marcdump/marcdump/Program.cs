@@ -383,6 +383,19 @@ namespace marcdump
                 }
             }
 
+            string textFixer(string s)
+            {
+                if( s.EndsWith(" /"))
+                {
+                    s = s.Substring(0,s.Length-2);
+                }
+                if (s.EndsWith("."))
+                {
+                    s = s.Substring(0, s.Length - 1);
+                }
+                return s;
+            }
+
             var items = new List<myItem>();
             var idChecker = new Dictionary<string, bool>();
 
@@ -390,7 +403,10 @@ namespace marcdump
             {
                 foreach (var item in items)
                 {
-                    dstWriter.WriteLine($"{item.Date} {item.Subject}");
+                    var w = "";
+                    if(item.writerNames.Count > 0 ) w = item.writerNames[0];
+                    if (item.writerNames.Count > 1) w += "(等)";
+                    dstWriter.WriteLine($"{item.Date}\t{w}\t{item.Subject}");
                 }
             }
             void normalDump()
@@ -498,9 +514,9 @@ namespace marcdump
                         if (id == "363j") f363j = subrec.data;
                         if (id == "363k") f363k = subrec.data;
                         if (id == "363l") f363l = subrec.data;
-                        if (id == "245a") subject += subrec.data;
-                        if (id == "245b") subject += subrec.data;
-                        if (id == "773t") subject += subrec.data;
+                        if (id == "245a") subject += textFixer(subrec.data);
+                        if (id == "245b") subject += textFixer(subrec.data);
+                        if (id == "773t") subject += textFixer(subrec.data);
                         if (id == "0011") internalId = subrec.data;
                         if (id == "245c") parseNames(writerNames, subrec.data);
                         //if (id == "500a") parseNames(writerNames, subrec.data);
