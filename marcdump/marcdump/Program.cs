@@ -339,6 +339,7 @@ namespace marcdump
             }
 
             var items = new List<myItem>();
+            var idChecker = new Dictionary<string, bool>();
 
             void normalDump()
             {
@@ -346,6 +347,7 @@ namespace marcdump
                 {
                     dstWriter.WriteLine($"Subject: {item.Date}");   // TBW
                     dstWriter.WriteLine($"Date: {item.Date}");
+                    dstWriter.WriteLine($"ID: {item.id}");
                     foreach (var field in item.fields)
                     {
                         if (field.kakkoItem)
@@ -456,7 +458,13 @@ namespace marcdump
                 if (date != null)
                 {
                     var subject = "TBW";
-                    items.Add(new myItem() { Date = date, id = MyId.CreateId(subject, date), fields = fields });
+                    var myid = MyId.CreateId(subject, date);
+                    items.Add(new myItem() { Date = date, id = myid, fields = fields });
+                    if (idChecker.ContainsKey(myid))
+                        Console.WriteLine($"Duplicated ID {myid}, {subject}, {date}");
+                    else
+                        idChecker.Add(myid, false);
+
                     //dstWriter.WriteLine($"Detected Date: {date}");
                     DateDetectCounter++;
                 }
