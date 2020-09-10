@@ -427,6 +427,12 @@ namespace marcdump
                     // レコードセパレーター
                     dstWriter.WriteLine();
                 }
+                // 著者集計リスト
+                dstWriter.WriteLine("著者集計リスト");
+                foreach (var item in AllWriterNames.OrderByDescending(c => c.Value))
+                {
+                    dstWriter.WriteLine($"{item.Key}\t{item.Value}");
+                }
             }
 
             DateDetectCounter = 0;
