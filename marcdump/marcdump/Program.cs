@@ -411,15 +411,24 @@ namespace marcdump
             var items = new List<myItem>();
             var idChecker = new Dictionary<string, bool>();
 
-            void digestDump()
+            void digestDumpRecord(myItem item)
             {
-                foreach (var item in items)
+                var w = "";
+                if (item.writerNames.Count > 0) w = item.writerNames[0];
+                if (item.writerNames.Count > 1) w += "(等)";
+                dstWriter.WriteLine($"{item.Date}\t{w}\t{item.Subject}");
+            }
+
+            void digestDump(IEnumerable<myItem> myItems)
+            {
+                foreach (var item in myItems)
                 {
-                    var w = "";
-                    if(item.writerNames.Count > 0 ) w = item.writerNames[0];
-                    if (item.writerNames.Count > 1) w += "(等)";
-                    dstWriter.WriteLine($"{item.Date}\t{w}\t{item.Subject}");
+                    digestDumpRecord(item);
                 }
+            }
+            void digestDumps()
+            {
+                digestDump(items);
             }
             void normalDump()
             {
@@ -439,6 +448,18 @@ namespace marcdump
                     // レコードセパレーター
                     dstWriter.WriteLine();
                 }
+                // 著者別リスト
+                foreach (var name in AllWriterNames.OrderByDescending(c => c.Value).ThenBy(c => c.Key))
+                {
+                    dstWriter.WriteLine($"著者 {name.Key} リスト");
+                    foreach (var item in items.Where(c => c.writerNames.Contains(name.Key)))
+                    {
+                        dstWriter.WriteLine($"{item.id}\t{item.Date}\t{item.Subject}");
+                    }
+                    // レコードセパレーター
+                    dstWriter.WriteLine();
+                }
+
                 // 著者集計リスト
                 dstWriter.WriteLine("著者集計リスト");
                 foreach (var item in AllWriterNames.OrderByDescending(c => c.Value).ThenBy(c=>c.Key))
@@ -602,7 +623,7 @@ namespace marcdump
             }
             else if( digestMode)
             {
-                digestDump();
+                digestDumps();
             }
             else
             {
