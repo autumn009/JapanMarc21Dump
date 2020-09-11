@@ -83,7 +83,7 @@ namespace ybd2html
 
             var indexHtml = Path.Combine(args[1], "index.html");
             CreateIndexPage(indexHtml);
-
+            foreach (var record in records) CreateEachPage(record, Path.Combine(args[1], record.getField("YBDID")+".html"));
 
 
             var startInfo = new System.Diagnostics.ProcessStartInfo(indexHtml);
@@ -137,10 +137,22 @@ namespace ybd2html
                 writer.Write($"<li><a href=\"{url}\">{toHtml(name)}</a></li>");
             }
 
+            string getDigest(YBDRecord item)
+            {
+                var w = "";
+                var wr = item.enumFields("WRITER").ToArray();
+                if (wr.Length > 0) w = wr[0];
+                if (wr.Length > 1) w += "(等)";
+                var p = "";
+                var pr = item.enumFields("PUBLISHER").ToArray();
+                if (pr.Length > 0) p = pr[0];
+                if (pr.Length > 1) p += "(等)";
+                return $"{item.getField("DATE")} {w} {p} {item.getField("SUBJECT")}";
+            }
 
             void CreateIndexPage(string path)
             {
-                using( TextWriter writer = File.CreateText(path) )
+                using (TextWriter writer = File.CreateText(path))
                 {
                     writeHtmlHead(writer, "YBD Index");
                     writer.WriteLine("<h1>YBD Index</h1>");
@@ -149,22 +161,42 @@ namespace ybd2html
 
                     foreach (var item in records)
                     {
-                        var w = "";
-                        var wr = item.enumFields("WRITER").ToArray();
-                        if (wr.Length > 0) w = wr[0];
-                        if (wr.Length > 1) w += "(等)";
-                        var p = "";
-                        var pr = item.enumFields("PUBLISHER").ToArray();
-                        if (pr.Length > 0) p = pr[0];
-                        if (pr.Length > 1) p += "(等)";
-                        var subject = $"{item.getField("DATE")} {w} {p} {item.getField("SUBJECT")}";
-                        writeLiLink(writer, $"{item.getField("YBDID")}.html", subject);
+                        writeLiLink(writer, $"{item.getField("YBDID")}.html", getDigest(item));
                     }
                     writer.WriteLine("</ul>");
                     writeHtmlEnd(writer);
-                    
                 }
             }
+
+            void CreateEachPage(YBDRecord record, string path)
+            {
+                using (TextWriter writer = File.CreateText(path))
+                {
+                    var subject = getDigest(record);
+
+                    writeHtmlHead(writer, subject);
+                    writer.WriteLine($"<h1>{toHtml(subject)}</h1>");
+
+                    writer.WriteLine("<table>");
+                    writer.WriteLine("<tr>");
+                    writer.WriteLine("<th>ID</th>");
+                    writer.WriteLine("<th>VALUE</th>");
+                    writer.WriteLine("</tr>");
+
+                    foreach (var field in record.fields)
+                    {
+                        writer.WriteLine("<tr>");
+                        writer.WriteLine($"<td>{toHtml(field.id)}</td>");
+                        writer.WriteLine($"<td>{toHtml(field.val)}</td>");
+                        writer.WriteLine("</tr>");
+                    }
+                    writer.WriteLine("</table>");
+                    writeHtmlEnd(writer);
+                }
+            }
+
+            
+
         }
     }
 }
