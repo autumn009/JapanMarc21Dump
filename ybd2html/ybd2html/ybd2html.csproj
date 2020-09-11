@@ -5,4 +5,12 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="About.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="About.txt" />
+  </ItemGroup>
+
 </Project>

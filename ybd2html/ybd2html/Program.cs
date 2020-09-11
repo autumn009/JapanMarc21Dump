@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -83,6 +84,8 @@ namespace ybd2html
 
             var indexHtml = Path.Combine(args[1], "index.html");
             CreateIndexPage(indexHtml);
+            CreateAboutPage(Path.Combine(args[1], "about.html"));
+
             foreach (var record in records) CreateEachPage(record, Path.Combine(args[1], record.getField("YBDID")+".html"));
 
 
@@ -137,6 +140,16 @@ namespace ybd2html
                 writer.Write($"<li><a href=\"{url}\">{toHtml(name)}</a></li>");
             }
 
+            void CreateLinkToAboutPage(TextWriter writer)
+            {
+                writer.WriteLine($"<p>[<a href=\"about.html\">このページについて</a>]</p>");
+            }
+
+            void CreateLinkToMainPage(TextWriter writer)
+            {
+                writer.WriteLine($"<p>[<a href=\"index.html\">表紙に戻る</a>]</p>");
+            }
+
             string getDigest(YBDRecord item)
             {
                 var w = "";
@@ -164,6 +177,7 @@ namespace ybd2html
                         writeLiLink(writer, $"{item.getField("YBDID")}.html", getDigest(item));
                     }
                     writer.WriteLine("</ul>");
+                    CreateLinkToAboutPage(writer);
                     writeHtmlEnd(writer);
                 }
             }
@@ -191,11 +205,37 @@ namespace ybd2html
                         writer.WriteLine("</tr>");
                     }
                     writer.WriteLine("</table>");
+                    CreateLinkToMainPage(writer);
+                    CreateLinkToAboutPage(writer);
                     writeHtmlEnd(writer);
                 }
             }
 
-            
+            void CreateAboutPage(string path)
+            {
+                using (TextWriter writer = File.CreateText(path))
+                {
+                    writeHtmlHead(writer, "About YBD");
+                    writer.WriteLine("<h1>About Index</h1>");
+
+                    var assembly = Assembly.GetExecutingAssembly();
+                    using (var reader = new StreamReader(assembly.GetManifestResourceStream(@"ybd2html.About.txt")))
+                    {
+                        for (; ; )
+                        {
+                            var s = reader.ReadLine();
+                            if (s == null) break;
+                            writer.Write("<p>");
+                            writer.Write(toHtml(s));
+                            writer.WriteLine("</p>");
+                        }
+                    }
+                    CreateLinkToMainPage(writer);
+
+                    writeHtmlEnd(writer);
+                }
+            }
+
 
         }
     }
