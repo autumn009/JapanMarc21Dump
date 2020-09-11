@@ -288,12 +288,23 @@ namespace ybd2html
                     }
                     writer.WriteLine("</table>");
 
-
-
-
                     // per date list
+                    writer.WriteLine("<h2>YEAR COUNT</h2>");
+                    writer.WriteLine("<table>");
+                    writer.WriteLine("<tr>");
+                    writer.WriteLine("<th>DATE</th>");
+                    writer.WriteLine("<th>VALUE</th>");
+                    writer.WriteLine("</tr>");
 
-
+                    for (int year = 1977; year <= 2020; year++)
+                    {
+                        writer.WriteLine("<tr>");
+                        var y = year.ToString();
+                        writer.WriteLine($"<td>{y}</td>");
+                        writer.WriteLine($"<td>{records.Where(c => c.getField("DATE").StartsWith(y)).Count()}</td>");
+                        writer.WriteLine("</tr>");
+                    }
+                    writer.WriteLine("</table>");
 
                     // per writer list
 
