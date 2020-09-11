@@ -25,7 +25,7 @@ namespace marcdump
         const int SUBFIELD_NUM = 256;  /* サブフィールドの数 */
         private static bool fullMode = false;
         private static bool inverseMode = false;
-        private static bool htmlMode = false;
+        private static bool ybdMode = false;
         private static bool digestMode = false;
         private static int TotalCounter = 0;    // 検出レコード数
         private static int DateDetectCounter = 0;   // date検出レコード数
@@ -71,6 +71,7 @@ namespace marcdump
             internal List<myField> fields = new List<myField>();
             internal List<string> writerNames;
             internal List<string> publisherNames;
+            internal List<string> publisherIDs;
         }
 
 
@@ -460,6 +461,33 @@ namespace marcdump
             {
                 digestDump(items);
             }
+
+            void YbdDump()
+            {
+                foreach (var item in items)
+                {
+                    var subject = item.Subject;
+                    var pubid = item.publisherIDs.FirstOrDefault();
+                    if (pubid != null)
+                    {
+                        var s = pubid;
+                        if (item.publisherIDs.Count > 1) s += "等";
+                        subject += " (" + s + ")";
+                    }
+                    dstWriter.WriteLine($"YBDID\t{item.id}");
+                    dstWriter.WriteLine($"SUBJECT\t{subject}");
+                    dstWriter.WriteLine($"DATE\t{item.Date}");
+                    foreach (var w in item.writerNames) dstWriter.WriteLine($"WRITER\t{w}");
+                    foreach (var p in item.publisherNames) dstWriter.WriteLine($"PUBLISHER\t{p}");
+                    foreach (var field in item.fields)
+                    {
+                        dstWriter.WriteLine($"{field.id}\t{field.data}");
+                    }
+                    // レコードセパレーター
+                    dstWriter.WriteLine();
+                }
+            }
+
             void normalDump()
             {
                 foreach (var item in items)
@@ -561,6 +589,7 @@ namespace marcdump
                 string internalId = null;
                 var writerNames = new List<string>();
                 var publisherNames = new List<string>();
+                var publisherIDs = new List<string>();
                 var fields = new List<myField>();
                 /* 出力 */
                 for (int i = 0; i < recNum; i++)
@@ -604,6 +633,7 @@ namespace marcdump
                         //if (id == "500a") parseNames(writerNames, subrec.data);
                         if (id == "028b") parsePublishers(publisherNames, subrec.data);
                         if (id == "260b") parsePublishers(publisherNames, subrec.data);
+                        if (id == "028a") publisherIDs.Add(subrec.data);
                     }
                 }
 
@@ -624,7 +654,7 @@ namespace marcdump
                         Console.WriteLine("Missing internalId");
                     }
                     var myid = TotalCounter.ToString("YBD0000"); //MyId.CreateId(subject, internalId);
-                    items.Add(new myItem() { Subject = subject,  Date = date, id = myid, fields = fields, writerNames = writerNames, publisherNames = publisherNames });
+                    items.Add(new myItem() { Subject = subject,  Date = date, id = myid, fields = fields, writerNames = writerNames, publisherNames = publisherNames, publisherIDs = publisherIDs});
                     foreach (var item in writerNames)
                     {
                         if (AllWriterNames.ContainsKey(item))
@@ -669,9 +699,9 @@ namespace marcdump
             });
 
             // output by mode
-            if (htmlMode)
+            if (ybdMode)
             {
-                // HtmlDump();
+                YbdDump();
             }
             else if( digestMode)
             {
@@ -706,7 +736,7 @@ namespace marcdump
             }
             fullMode = options.Contains("-f");
             inverseMode = options.Contains("-i");
-            htmlMode = options.Contains("-h");
+            ybdMode = options.Contains("-y");
             digestMode = options.Contains("-d");
             var srcFileName = rawArgs[0];
             var dstWriter = Console.Out;
@@ -739,7 +769,7 @@ namespace marcdump
             Console.WriteLine("Usase: marcdump INPUT_FILE [OUTPUT_FILE] [-f]");
             Console.WriteLine("use -f option for full-information");
             Console.WriteLine("use -i option for invers information");
-            Console.WriteLine("use -h option for output HTML mode");
+            Console.WriteLine("use -y option for output YBD mode");
             Console.WriteLine("use -d option for output Digest mode");
             Console.WriteLine("use -? option for dump this message");
             return;
