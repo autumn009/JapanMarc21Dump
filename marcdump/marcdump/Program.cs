@@ -288,7 +288,9 @@ namespace marcdump
                 // 2020.2.
                 // [2020.3]
                 // [19--]
+                // c1993.
                 var s = src.TrimStart('[').TrimEnd(']').Replace('-', '0');
+                if (s.StartsWith("c")) s = s.Substring(1);
                 var ar = s.Split('.');
                 var s1 = "0";
                 var s2 = "0";
