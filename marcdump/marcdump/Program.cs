@@ -443,7 +443,10 @@ namespace marcdump
                 var w = "";
                 if (item.writerNames.Count > 0) w = item.writerNames[0];
                 if (item.writerNames.Count > 1) w += "(等)";
-                dstWriter.WriteLine($"{item.Date}\t{w}\t{item.Subject}");
+                var p = "";
+                if (item.publisherNames.Count > 0) p = item.publisherNames[0];
+                if (item.publisherNames.Count > 1) p += "(等)";
+                dstWriter.WriteLine($"{item.Date}\t{w}\t{p}\t{item.Subject}");
             }
 
             void digestDump(IEnumerable<myItem> myItems)
