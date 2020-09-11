@@ -31,6 +31,7 @@ namespace marcdump
         private static int DateDetectCounter = 0;   // date検出レコード数
         private static int SubjectDetectCounter = 0;    // subject検出レコード数
         private static Dictionary<string, int> AllWriterNames = new Dictionary<string, int>();
+        private static Dictionary<string, int> AllPublisherNames = new Dictionary<string, int>();
 
         class Entry
         {
@@ -69,6 +70,7 @@ namespace marcdump
             internal string Date;
             internal List<myField> fields = new List<myField>();
             internal List<string> writerNames;
+            internal List<string> publisherNames;
         }
 
 
@@ -341,6 +343,31 @@ namespace marcdump
                 return r;
             }
 
+            void parsePublishers(List<string> publisherNames, string data)
+            {
+                if (data.EndsWith(",")) data = data.Substring(0, data.Length - 1);
+                if (data.EndsWith(" (発売)")) data = data.Substring(0, data.Length - 5);
+                if (data.StartsWith("[")) data = data.Substring(1, data.Length - 1);
+                if (data.EndsWith("]")) data = data.Substring(0, data.Length - 1);
+                if (data.EndsWith(" ;")) data = data.Substring(0, data.Length - 2);
+                if (data.EndsWith(" :")) data = data.Substring(0, data.Length - 2);
+                if (data == "---") return;
+                var sb = new StringBuilder();
+                for (int i = 0; i < data.Length; i++)
+                {
+                    char ch = data[i];
+                    char f1 = (char)0xffff;
+                    if (i > 0) f1 = data[i - 1];
+                    char f2 = (char)0xffff;
+                    if (i < data.Length - 1) f2 = data[i + 1];
+                    if (data[i] == '-' && f1 > 0x100 && f2 > 0x100) ch = 'ー';
+                    if (ch == ' ' && f1 > 0x100 && f2 == '(') continue;
+                    sb.Append(ch);
+                }
+                if (publisherNames.Contains(sb.ToString())) return;
+                publisherNames.Add(sb.ToString());
+            }
+
             void parseNames(List<string> writerNames, string data)
             {
                 if (data.Contains(":"))
@@ -437,6 +464,7 @@ namespace marcdump
                     dstWriter.WriteLine($"Subject: {item.Subject}");
                     dstWriter.WriteLine($"Date: {item.Date}");
                     dstWriter.WriteLine($"Writer(s): {string.Join(',', item.writerNames)}");
+                    dstWriter.WriteLine($"Publisher(s): {string.Join(',', item.publisherNames)}");
                     dstWriter.WriteLine($"ID: {item.id}");
                     foreach (var field in item.fields)
                     {
@@ -463,6 +491,15 @@ namespace marcdump
                 // 著者集計リスト
                 dstWriter.WriteLine("著者集計リスト");
                 foreach (var item in AllWriterNames.OrderByDescending(c => c.Value).ThenBy(c=>c.Key))
+                {
+                    dstWriter.WriteLine($"{item.Key}\t{item.Value}");
+                }
+                // レコードセパレーター
+                dstWriter.WriteLine();
+
+                // Publisher集計リスト
+                dstWriter.WriteLine("Publisher集計リスト");
+                foreach (var item in AllPublisherNames.OrderByDescending(c => c.Value).ThenBy(c => c.Key))
                 {
                     dstWriter.WriteLine($"{item.Key}\t{item.Value}");
                 }
@@ -520,6 +557,7 @@ namespace marcdump
                 string subject = "";
                 string internalId = null;
                 var writerNames = new List<string>();
+                var publisherNames = new List<string>();
                 var fields = new List<myField>();
                 /* 出力 */
                 for (int i = 0; i < recNum; i++)
@@ -561,6 +599,8 @@ namespace marcdump
                         if (id == "0011") internalId = subrec.data;
                         if (id == "245c") parseNames(writerNames, subrec.data);
                         //if (id == "500a") parseNames(writerNames, subrec.data);
+                        if (id == "028b") parsePublishers(publisherNames, subrec.data);
+                        if (id == "260b") parsePublishers(publisherNames, subrec.data);
                     }
                 }
 
@@ -581,13 +621,20 @@ namespace marcdump
                         Console.WriteLine("Missing internalId");
                     }
                     var myid = TotalCounter.ToString("YBD0000"); //MyId.CreateId(subject, internalId);
-                    items.Add(new myItem() { Subject = subject,  Date = date, id = myid, fields = fields, writerNames = writerNames });
+                    items.Add(new myItem() { Subject = subject,  Date = date, id = myid, fields = fields, writerNames = writerNames, publisherNames = publisherNames });
                     foreach (var item in writerNames)
                     {
                         if (AllWriterNames.ContainsKey(item))
                             AllWriterNames[item]++;
                         else
                             AllWriterNames.Add(item, 1);
+                    }
+                    foreach (var item in publisherNames)
+                    {
+                        if (AllPublisherNames.ContainsKey(item))
+                            AllPublisherNames[item]++;
+                        else
+                            AllPublisherNames.Add(item, 1);
                     }
 
                     if (idChecker.ContainsKey(myid))
