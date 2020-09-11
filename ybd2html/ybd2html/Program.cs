@@ -307,6 +307,69 @@ namespace ybd2html
                     writer.WriteLine("</table>");
 
                     // per writer list
+                    // 著者別リスト
+                    Dictionary<string, int> AllWriterNames = new Dictionary<string, int>();
+
+                    foreach (var record in records)
+                    {
+                        foreach (var item in record.enumFields("WRITER"))
+                        {
+                            if (AllWriterNames.ContainsKey(item))
+                                AllWriterNames[item]++;
+                            else
+                                AllWriterNames.Add(item, 1);
+                        }
+                    }
+                    foreach (var name in AllWriterNames.OrderByDescending(c => c.Value).ThenBy(c => c.Key))
+                    {
+                        writer.WriteLine($"<h2>著者 {toHtml(name.Key)} リスト</h2>");
+                        writer.WriteLine("<table>");
+                        writer.WriteLine("<tr>");
+                        writer.WriteLine("<th>YBDID</th>");
+                        writer.WriteLine("<th>DATE</th>");
+                        writer.WriteLine("<th>SUBJECT</th>");
+                        writer.WriteLine("</tr>");
+                        foreach (var item in records.Where(c => c.enumFields("WRITER").Contains(name.Key)))
+                        {
+                            writer.WriteLine("<tr>");
+                            writer.WriteLine($"<td>{item.getField("YBDID")}</td>");
+                            writer.WriteLine($"<td>{item.getField("DATE")}</td>");
+                            writer.WriteLine($"<td>{item.getField("SUBJECT")}</td>");
+                            writer.WriteLine("</tr>");
+                        }
+                        // レコードセパレーター
+                        writer.WriteLine();
+                        writer.WriteLine("</table>");
+                    }
+
+                    // 著者集計リスト
+                    writer.WriteLine("著者集計リスト");
+                    foreach (var item in AllWriterNames.OrderByDescending(c => c.Value).ThenBy(c => c.Key))
+                    {
+                        writer.WriteLine($"{item.Key}\t{item.Value}");
+                    }
+                    // レコードセパレーター
+                    writer.WriteLine();
+
+                    // Publisher集計リスト
+                    Dictionary<string, int> AllPublisherNames = new Dictionary<string, int>();
+                    foreach (var record in records)
+                    {
+                        foreach (var item in record.enumFields("PUBLISHER"))
+                        {
+                            if (AllPublisherNames.ContainsKey(item))
+                                AllPublisherNames[item]++;
+                            else
+                                AllPublisherNames.Add(item, 1);
+                        }
+                    }
+                    writer.WriteLine("Publisher集計リスト");
+                    foreach (var item in AllPublisherNames.OrderByDescending(c => c.Value).ThenBy(c => c.Key))
+                    {
+                        writer.WriteLine($"{item.Key}\t{item.Value}");
+                    }
+
+
 
 
                     // per publkisher list
