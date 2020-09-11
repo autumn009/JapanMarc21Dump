@@ -339,7 +339,7 @@ namespace marcdump
                     s2 = "0";
                     s3 = "0";
                 }
-                var r = s1.PadRight(4, '0') + s2.PadRight(2, '0') + s3.PadRight(2, '0');
+                var r = s1.PadLeft(4, '0') + s2.PadLeft(2, '0') + s3.PadLeft(2, '0');
 #if DEBUG
                 //Console.WriteLine($"{r} {s1} {s2} {s3}");
 #endif
