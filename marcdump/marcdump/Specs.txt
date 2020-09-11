@@ -27,7 +27,8 @@ DATE	上記仕様の日付
 SUBJECT	見出し
 WRITER	著作者
 PUBLISHER　出版社
-　WRITERとPUBLISHERは2つ以上あってもよ。その場合はコレクションとなる。
+COMMENT	手動追加コメント
+　WRITERとPUBLISHERとCOMMENTは2つ以上あってもよい。その場合はコレクションとなる。
 　残りはユニーク
 
 
