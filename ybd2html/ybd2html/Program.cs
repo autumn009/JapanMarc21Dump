@@ -24,12 +24,17 @@ namespace ybd2html
             internal MyField[] fields;
             internal string getField(string id)
             {
-                return fields.SingleOrDefault(c => c.id == id)?.val;
+                var a = fields.SingleOrDefault(c => c.id == id);
+                if(a == null)
+                {
+                    _ = a;
+                }
+                return a?.val; 
             }
 
             internal IEnumerable<string> enumFields(string id)
             {
-                return fields.Where(c => c.id == id).Select(c=>c.val).ToArray();
+                return fields.Where(c => c.id == id).Select(c => c.val).ToArray();
             }
         }
 
@@ -42,12 +47,12 @@ namespace ybd2html
                 using (var reader = File.OpenText(filename))
                 {
                     var records = new List<YBDRecord>();
-                    for(; ; )
+                    for (; ; )
                     {
                         var record = new YBDRecord();
 
                         var f = new List<MyField>();
-                        for(; ; )
+                        for (; ; )
                         {
                             var s = reader.ReadLine();
                             if (s == null)
@@ -57,7 +62,7 @@ namespace ybd2html
                             }
                             if (s.Trim().Length == 0) break;
                             var index = s.IndexOf('\t');
-                            if( index < 0 )
+                            if (index < 0)
                             {
                                 Console.WriteLine($"Fatal Exit {s}");
                                 Process.GetCurrentProcess().Kill();
@@ -66,15 +71,18 @@ namespace ybd2html
                             var val = s.Substring(index + 1);
                             f.Add(new MyField() { id = id, val = val });
                         }
-                        record.fields = f.ToArray();
-                        records.Add(record);
+                        if (f.Count > 0)
+                        {
+                            record.fields = f.ToArray();
+                            records.Add(record);
+                        }
                         if (eof) break;
                     }
                     return records.ToArray();
                 }
             }
 
-            if ( args.Length != 2)
+            if (args.Length != 2)
             {
                 Console.WriteLine("usage: ybd2html YBD_FILE_NAME OUTPUT_DIR_NAME");
                 return;
@@ -86,12 +94,21 @@ namespace ybd2html
             CreateIndexPage(indexHtml);
             CreateAboutPage(Path.Combine(args[1], "about.html"));
 
-            foreach (var record in records) CreateEachPage(record, Path.Combine(args[1], record.getField("YBDID")+".html"));
-
+#if false
+            var urlPrefix = "http://nan.piedey.co.jp/~autumn/ybd/";
+#else
+            var urlPrefix = "";
+#endif
+            var uraHtml = Path.Combine(args[1], "$full.html");
+            CreateUraPage(uraHtml);
+            foreach (var record in records) CreateEachPage(record, Path.Combine(args[1], record.getField("YBDID") + ".html"));
 
             var startInfo = new System.Diagnostics.ProcessStartInfo(indexHtml);
             startInfo.UseShellExecute = true;
             System.Diagnostics.Process.Start(startInfo);
+            var startInfo2 = new System.Diagnostics.ProcessStartInfo(uraHtml);
+            startInfo2.UseShellExecute = true;
+            System.Diagnostics.Process.Start(startInfo2);
 
             Console.WriteLine("Done.");
 
@@ -114,7 +131,7 @@ namespace ybd2html
                 return sb.ToString();
             }
 
-            void writeHtmlHead(TextWriter writer,string title)
+            void writeHtmlHead(TextWriter writer, string title)
             {
                 writer.WriteLine("<!DOCTYPE html>");
                 writer.WriteLine("<html lang=\"ja\">");
@@ -131,7 +148,7 @@ namespace ybd2html
                 writer.WriteLine("</html>");
             }
 
-            void writeLink(TextWriter writer, string url, string name )
+            void writeLink(TextWriter writer, string url, string name)
             {
                 writer.Write($"<a href=\"{url}\">{toHtml(name)}</a>");
             }
@@ -231,6 +248,60 @@ namespace ybd2html
                         }
                     }
                     CreateLinkToMainPage(writer);
+
+                    writeHtmlEnd(writer);
+                }
+            }
+
+            void CreateUraPage(string path)
+            {
+                using (TextWriter writer = File.CreateText(path))
+                {
+                    writeHtmlHead(writer, "FULL INFO");
+                    writer.WriteLine("<h1>FULL INFO</h1>");
+
+                    // full index
+                    writer.WriteLine("<h2>ALL INDEX</h2>");
+                    foreach (var item in records)
+                    {
+                        writeLiLink(writer, $"{urlPrefix}{item.getField("YBDID")}.html", getDigest(item));
+                    }
+
+                    // monthly statics
+                    writer.WriteLine("<h2>MONTHLY COUNT</h2>");
+                    writer.WriteLine("<table>");
+                    writer.WriteLine("<tr>");
+                    writer.WriteLine("<th>DATE</th>");
+                    writer.WriteLine("<th>VALUE</th>");
+                    writer.WriteLine("</tr>");
+
+                    for (int year = 1977; year <= 2020; year++)
+                    {
+                        for (int month = 1; month <= 12; month++)
+                        {
+                            writer.WriteLine("<tr>");
+                            var ym = year.ToString() + month.ToString().PadLeft(2, '0');
+                            writer.WriteLine($"<td>{ym}</td>");
+                            writer.WriteLine($"<td>{records.Where(c=>c.getField("DATE").StartsWith(ym)).Count()}</td>");
+                            writer.WriteLine("</tr>");
+                        }
+                    }
+                    writer.WriteLine("</table>");
+
+
+
+
+                    // per date list
+
+
+
+                    // per writer list
+
+
+                    // per publkisher list
+
+
+
 
                     writeHtmlEnd(writer);
                 }
