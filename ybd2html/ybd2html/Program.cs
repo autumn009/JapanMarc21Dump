@@ -391,16 +391,37 @@ namespace ybd2html
                                 AllPublisherNames.Add(item, 1);
                         }
                     }
-                    writer.WriteLine("Publisher集計リスト");
-                    foreach (var item in AllPublisherNames.OrderByDescending(c => c.Value).ThenBy(c => c.Key))
+                    writer.WriteLine("<h2>Publisher集計リスト</h2>");
+                    foreach (var name in AllPublisherNames.OrderByDescending(c => c.Value).ThenBy(c => c.Key))
                     {
-                        writer.WriteLine($"{item.Key}\t{item.Value}");
+                        writer.WriteLine($"<h2>Publisher {toHtml(name.Key)} リスト</h2>");
+                        writeTable(writer,
+                            new string[] { "YBDID", "DATE", "SUBJECT" },
+                            records.Where(c => c.enumFields("PUBLISHER").Contains(name.Key)).Select(c =>
+                            {
+                                string[] values = new string[] {
+                                    urlPrefix + c.getField("YBDID")+".html",
+                                    c.getField("YBDID"),
+                                    c.getField("DATE"),
+                                    c.getField("SUBJECT")
+                                };
+                                return values;
+                            }));
                     }
 
-
-
-
-                    // per publkisher list
+                    // per publisher list
+                    writer.WriteLine("<h2>Publisher集計リスト</h2>");
+                    writeTable(writer,
+                        new string[] { "PUBLISHER", "COUNT" },
+                        AllPublisherNames.OrderByDescending(c => c.Value).ThenBy(c => c.Key).Select(c =>
+                        {
+                            string[] values = new string[] {
+                                                        "",
+                                                        c.Key,
+                                                        c.Value.ToString()
+                            };
+                            return values;
+                        }));
 
 
 
