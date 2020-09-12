@@ -25,11 +25,7 @@ namespace ybd2html
             internal string getField(string id)
             {
                 var a = fields.SingleOrDefault(c => c.id == id);
-                if(a == null)
-                {
-                    _ = a;
-                }
-                return a?.val; 
+                return a?.val;
             }
 
             internal IEnumerable<string> enumFields(string id)
@@ -423,8 +419,39 @@ namespace ybd2html
                             return values;
                         }));
 
+                    // per type
+                    writer.WriteLine("<h2>資料種別・集計リスト</h2>");
+                    // create all list
+                    Dictionary<string, int> typeDic = new Dictionary<string, int>();
+                    foreach (var record in records)
+                    {
+                        var s = record.getField("資料種別");
+                        if (s != null)
+                        {
+                            if (s.StartsWith("[")) s = s.Substring(1);
+                            var index = s.LastIndexOf(']');
+                            if (index > 0) s = s.Substring(0, index);
+                        }
+                        else
+                            s = "その他";
 
+                        if (typeDic.ContainsKey(s))
+                            typeDic[s]++;
+                        else
+                            typeDic.Add(s, 1);
+                    }
 
+                    writeTable(writer,
+                        new string[] { "TYPE", "COUNT" },
+                        typeDic.OrderByDescending(c => c.Value).ThenBy(c => c.Key).Select(c =>
+                        {
+                            string[] values = new string[] {
+                                                        "",
+                                                        c.Key,
+                                                        c.Value.ToString()
+                            };
+                            return values;
+                        }));
 
                     writeHtmlEnd(writer);
                 }
