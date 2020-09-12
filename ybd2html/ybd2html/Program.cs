@@ -172,7 +172,10 @@ namespace ybd2html
                     var url = item.First();
                     foreach (var data in item.Skip(1))
                     {
-                        writer.WriteLine($"<td><a href=\"{url}\">{toHtml(data)}</a></td>");
+                        if (string.IsNullOrWhiteSpace(url))
+                            writer.WriteLine($"<td>{toHtml(data)}</td>");
+                        else
+                            writer.WriteLine($"<td><a href=\"{url}\">{toHtml(data)}</a></td>");
                     }
                     writer.WriteLine("</tr>");
                 }
@@ -362,13 +365,19 @@ namespace ybd2html
                     }
 
                     // 著者集計リスト
-                    writer.WriteLine("著者集計リスト");
-                    foreach (var item in AllWriterNames.OrderByDescending(c => c.Value).ThenBy(c => c.Key))
-                    {
-                        writer.WriteLine($"{item.Key}\t{item.Value}");
-                    }
-                    // レコードセパレーター
-                    writer.WriteLine();
+                    writer.WriteLine("<h2>著者集計リスト</h2>");
+                    writeTable(writer,
+                        new string[] { "WRITER", "COUNT" },
+                        AllWriterNames.OrderByDescending(c => c.Value).ThenBy(c => c.Key).Select(c =>
+                        {
+                            string[] values = new string[] {
+                                                        "",
+                                                        c.Key,
+                                                        c.Value.ToString()
+                            };
+                            return values;
+                        }));
+
 
                     // Publisher集計リスト
                     Dictionary<string, int> AllPublisherNames = new Dictionary<string, int>();
