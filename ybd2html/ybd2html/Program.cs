@@ -90,7 +90,7 @@ namespace ybd2html
             CreateIndexPage(indexHtml);
             CreateAboutPage(Path.Combine(args[1], "about.html"));
 
-#if false
+#if true
             var urlPrefix = "http://nan.piedey.co.jp/~autumn/ybd/";
 #else
             var urlPrefix = "";
