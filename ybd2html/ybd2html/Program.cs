@@ -157,6 +157,28 @@ namespace ybd2html
                 writer.Write($"<li><a href=\"{url}\">{toHtml(name)}</a></li>");
             }
 
+            void writeTable(TextWriter writer, string [] headers, IEnumerable<string[]> enumData)
+            {
+                writer.WriteLine("<table>");
+                writer.WriteLine("<tr>");
+                foreach (var item in headers)
+                {
+                    writer.WriteLine($"<th>{toHtml(item)}</th>");
+                }
+                writer.WriteLine("</tr>");
+                foreach (var item in enumData)
+                {
+                    writer.WriteLine("<tr>");
+                    var url = item.First();
+                    foreach (var data in item.Skip(1))
+                    {
+                        writer.WriteLine($"<td><a href=\"{url}\">{toHtml(data)}</a></td>");
+                    }
+                    writer.WriteLine("</tr>");
+                }
+                writer.WriteLine("</table>");
+            }
+
             void CreateLinkToAboutPage(TextWriter writer)
             {
                 writer.WriteLine($"<p>[<a href=\"about.html\">このページについて</a>]</p>");
@@ -320,26 +342,23 @@ namespace ybd2html
                                 AllWriterNames.Add(item, 1);
                         }
                     }
+
+
                     foreach (var name in AllWriterNames.OrderByDescending(c => c.Value).ThenBy(c => c.Key))
                     {
                         writer.WriteLine($"<h2>著者 {toHtml(name.Key)} リスト</h2>");
-                        writer.WriteLine("<table>");
-                        writer.WriteLine("<tr>");
-                        writer.WriteLine("<th>YBDID</th>");
-                        writer.WriteLine("<th>DATE</th>");
-                        writer.WriteLine("<th>SUBJECT</th>");
-                        writer.WriteLine("</tr>");
-                        foreach (var item in records.Where(c => c.enumFields("WRITER").Contains(name.Key)))
-                        {
-                            writer.WriteLine("<tr>");
-                            writer.WriteLine($"<td>{item.getField("YBDID")}</td>");
-                            writer.WriteLine($"<td>{item.getField("DATE")}</td>");
-                            writer.WriteLine($"<td>{item.getField("SUBJECT")}</td>");
-                            writer.WriteLine("</tr>");
-                        }
-                        // レコードセパレーター
-                        writer.WriteLine();
-                        writer.WriteLine("</table>");
+                        writeTable(writer,
+                            new string[] { "YBDID", "DATE", "SUBJECT" },
+                            records.Where(c => c.enumFields("WRITER").Contains(name.Key)).Select(c =>
+                            {
+                                string[] values = new string[] {
+                                    urlPrefix + c.getField("YBDID")+".html",
+                                    c.getField("YBDID"),
+                                    c.getField("DATE"),
+                                    c.getField("SUBJECT")
+                                };
+                                return values;
+                            }));
                     }
 
                     // 著者集計リスト
