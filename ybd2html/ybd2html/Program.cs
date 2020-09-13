@@ -309,6 +309,32 @@ namespace ybd2html
                     }
                     writer.WriteLine("</table>");
 
+                    // monthly statics (sorted)
+                    writer.WriteLine("<h2>MONTHLY COUNT (sorted)</h2>");
+                    writer.WriteLine("<table>");
+                    writer.WriteLine("<tr>");
+                    writer.WriteLine("<th>DATE</th>");
+                    writer.WriteLine("<th>VALUE</th>");
+                    writer.WriteLine("</tr>");
+
+                    var all2 = new List<Tuple<string, int>>();
+                    for (int year = 1977; year <= 2020; year++)
+                    {
+                        for (int month = 1; month <= 12; month++)
+                        {
+                            var ym = year.ToString() + month.ToString().PadLeft(2, '0');
+                            all2.Add(Tuple.Create(ym, records.Where(c => c.getField("DATE").StartsWith(ym)).Count()));
+                        }
+                    }
+                    foreach (var item in all2.OrderByDescending(c=>c.Item2))
+                    {
+                        writer.WriteLine("<tr>");
+                        writer.WriteLine($"<td>{item.Item1}</td>");
+                        writer.WriteLine($"<td>{item.Item2}</td>");
+                        writer.WriteLine("</tr>");
+                    }
+                    writer.WriteLine("</table>");
+
                     // per date list
                     writer.WriteLine("<h2>YEAR COUNT</h2>");
                     writer.WriteLine("<table>");
