@@ -335,7 +335,7 @@ namespace ybd2html
                     }
                     writer.WriteLine("</table>");
 
-                    // per date list
+                    // per year list
                     writer.WriteLine("<h2>YEAR COUNT</h2>");
                     writer.WriteLine("<table>");
                     writer.WriteLine("<tr>");
@@ -349,6 +349,30 @@ namespace ybd2html
                         var y = year.ToString();
                         writer.WriteLine($"<td>{y}</td>");
                         writer.WriteLine($"<td>{records.Where(c => c.getField("DATE").StartsWith(y)).Count()}</td>");
+                        writer.WriteLine("</tr>");
+                    }
+                    writer.WriteLine("</table>");
+
+                    // per year list (sorted)
+                    writer.WriteLine("<h2>YEAR COUNT (sorted)</h2>");
+                    writer.WriteLine("<table>");
+                    writer.WriteLine("<tr>");
+                    writer.WriteLine("<th>DATE</th>");
+                    writer.WriteLine("<th>VALUE</th>");
+                    writer.WriteLine("</tr>");
+
+                    var all1 = new List<Tuple<string, int>>();
+                    for (int year = 1977; year <= 2020; year++)
+                    {
+                        var y = year.ToString();
+                        all1.Add(Tuple.Create(y, records.Where(c => c.getField("DATE").StartsWith(y)).Count()));
+                    }
+
+                    foreach (var item in all1.OrderByDescending(c => c.Item2))
+                    {
+                        writer.WriteLine("<tr>");
+                        writer.WriteLine($"<td>{item.Item1}</td>");
+                        writer.WriteLine($"<td>{item.Item2}</td>");
                         writer.WriteLine("</tr>");
                     }
                     writer.WriteLine("</table>");
