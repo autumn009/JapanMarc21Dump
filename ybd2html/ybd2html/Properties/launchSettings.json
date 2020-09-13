@@ -2,7 +2,7 @@
   "profiles": {
     "ybd2html": {
       "commandName": "Project",
-      "commandLineArgs": "\"C:\\Users\\autumn.PDTOKYO4\\OneDrive\\SelfShare\\0pub\\Yamato\\BookDirectory\\YBD_宇宙戦艦ヤマト.txt\" \"c:\\delme\\ybd\""
+      "commandLineArgs": "\"C:\\Users\\autumn.PDTOKYO4\\OneDrive\\SelfShare\\0pub\\Yamato\\BookDirectory\\YBD_宇宙戦艦ヤマトa.txt\" \"c:\\delme\\ybd\""
     }
   }
 }
